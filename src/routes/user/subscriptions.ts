@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import {getAllSubscriptions, getSubscriptionById } from '../../controller/users/subscriptions';
+import { catchAsync } from '../../utils/catchAsync';
+import { validate } from '../../middlewares/validation';
+//import { CreateSubscriptionSchema, UpdateSubscriptionSchema } from '../../validation/user/subscriptions';
+import { authenticated } from '../../middlewares/authenticated';
+const router = Router();
+//router.post('/', authenticated, validate(CreateSubscriptionSchema), catchAsync(createSubscription));
+router.get('/', authenticated, catchAsync(getAllSubscriptions));
+router.get('/:id', authenticated, catchAsync(getSubscriptionById)); 
+// router.put('/:id', authenticated, validate(UpdateSubscriptionSchema), catchAsync(updateSubscription));
+// router.delete('/:id', authenticated, catchAsync(deleteSubscription));
+export default router;
