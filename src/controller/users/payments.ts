@@ -30,13 +30,3 @@ export const getPaymentById = async (req: Request, res: Response) => {
     if (!payment) throw new NotFound('Payment not found');
     SuccessResponse(res, { message: 'Payment fetched successfully', payment });
 }   
-export const getSubscriptionPayments = async (req: Request, res: Response) => {
-    if (!req.user) throw new UnauthorizedError("user is not authenticated");
-    const userId = req.user.id;
-    const { subscriptionId } = req.params;
-    if (!subscriptionId) throw new BadRequest('Please provide subscription id');
-    const subscription = await SubscriptionModel.findOne({ _id: subscriptionId, userId });
-    if (!subscription) throw new NotFound('Subscription not found');
-    const payments = await PaymentModel.find({ subscription_id: subscriptionId, userId }).populate('paymentmethod_id');
-    SuccessResponse(res, { message: 'All payments for the subscription fetched successfully', payments });
-}
