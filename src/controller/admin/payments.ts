@@ -70,7 +70,17 @@ export const updatePayment = async (req: Request, res: Response) => {
     const plan: any = payment.plan_id; 
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setMonth(startDate.getMonth() + (plan.durationMonths || 1)); 
+
+    // نحدد المدة حسب الـ amount اللي دفعه
+    if (payment.amount === plan.price_quarterly) {
+      endDate.setMonth(startDate.getMonth() + 3);
+    } else if (payment.amount === plan.price_semi_annually) {
+      endDate.setMonth(startDate.getMonth() + 6);
+    } else if (payment.amount === plan.price_annually) {
+      endDate.setMonth(startDate.getMonth() + 12);
+    } else {
+      throw new BadRequest("Invalid payment amount for this plan");
+    }
 
     await SubscriptionModel.create({
       userId: payment.userId,
@@ -79,7 +89,7 @@ export const updatePayment = async (req: Request, res: Response) => {
       startDate,
       endDate,
       websites_created_count: 0,    
-      websites_remaining_count: plan.websites_limit || 0, 
+      websites_remaining_count: plan.website_limit || 0, 
     });
   }
 

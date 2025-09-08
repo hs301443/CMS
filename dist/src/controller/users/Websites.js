@@ -11,7 +11,7 @@ const createWebsite = async (req, res) => {
     if (!req.user)
         throw new index_1.UnauthorizedError("User not authenticated");
     const { templateId, activitiesId, demo_link, project_path } = req.body;
-    if (!templateId || !demo_link || !project_path) {
+    if (!templateId || !demo_link || !project_path || !activitiesId) {
         throw new BadRequest_1.BadRequest("Please provide all required fields");
     }
     // 🔹 1. نجيب subscription الخاص باليوزر
@@ -52,8 +52,8 @@ exports.createWebsite = createWebsite;
 const getAllWebsites = async (req, res) => {
     if (!req.user)
         throw new index_1.UnauthorizedError("User not authenticated");
-    const userID = req.user.id;
-    const data = await websites_1.WebsiteModel.find({ userID }).populate("userId");
+    const userId = req.user.id;
+    const data = await websites_1.WebsiteModel.find({ userId });
     if (!data)
         throw new NotFound_1.NotFound("No website found");
     (0, response_1.SuccessResponse)(res, { message: "All website fetched successfully", data });
@@ -65,7 +65,7 @@ const getWebsiteById = async (req, res) => {
     const { id } = req.params;
     if (!id)
         throw new BadRequest_1.BadRequest("Please provide website id");
-    const data = await websites_1.WebsiteModel.findById(id).populate("userId");
+    const data = await websites_1.WebsiteModel.findById(id).populate("userId", "name email");
     if (!data)
         throw new NotFound_1.NotFound("Website not found");
     (0, response_1.SuccessResponse)(res, { message: "Website fetched successfully", data });

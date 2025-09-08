@@ -11,7 +11,7 @@ export const createWebsite = async (req: Request, res: Response) => {
 
   const { templateId, activitiesId, demo_link, project_path } = req.body;
 
-  if (!templateId || !demo_link || !project_path) {
+  if (!templateId || !demo_link || !project_path || !activitiesId) {
     throw new BadRequest("Please provide all required fields");
   }
 
@@ -57,8 +57,8 @@ export const createWebsite = async (req: Request, res: Response) => {
 
 export const getAllWebsites = async (req: Request, res: Response) => {
   if (!req.user) throw new UnauthorizedError("User not authenticated");
-  const userID=req.user.id;
-  const data = await WebsiteModel.find({userID}).populate("userId");
+  const userId =req.user.id;
+  const data = await WebsiteModel.find({userId });
   if (!data) throw new NotFound("No website found");
   SuccessResponse(res, { message: "All website fetched successfully", data });
 };
@@ -67,7 +67,7 @@ export const getWebsiteById = async (req: Request, res: Response) => {
   if (!req.user) throw new UnauthorizedError("User not authenticated");
   const { id } = req.params;
   if (!id) throw new BadRequest("Please provide website id");
-  const data = await WebsiteModel.findById(id).populate("userId");
+  const data = await WebsiteModel.findById(id).populate("userId", "name email");
   if (!data) throw new NotFound("Website not found");
   SuccessResponse(res, { message: "Website fetched successfully", data });
 };

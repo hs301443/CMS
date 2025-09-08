@@ -6,16 +6,49 @@ import { UnauthorizedError } from '../../Errors/unauthorizedError';
 import { SuccessResponse } from '../../utils/response';
 import { SubscriptionModel } from '../../models/shema/subscriptions';
 import { PaymentModel } from '../../models/shema/payments';
+import { PlanModel } from '../../models/shema/plans';
 
 export const createPayment = async (req: Request, res: Response) => {
-    if (!req.user) throw new UnauthorizedError("user is not authenticated");
-    const userId = req.user.id;
-    const {  plan_id, paymentmethod_id, amount} = req.body;
-      if (!amount || !paymentmethod_id || !plan_id) {
-    throw new BadRequest("Please provide all the required fields")};
-    const paymentMethod = await PaymentModel.create({  amount, paymentmethod_id, plan_id,payment_date: new Date(), userId , status: 'pending' });
-    SuccessResponse(res, { message: 'Payment created successfully', paymentMethod });
-}
+  if (!req.user) throw new UnauthorizedError("User is not authenticated");
+
+  const userId = req.user.id;
+  const { plan_id, paymentmethod_id, amount } = req.body;
+
+  if (!amount || !paymentmethod_id || !plan_id) {
+    throw new BadRequest("Please provide all the required fields");
+  }
+
+  // ✅ تحقق من أن الـ plan موجود
+  const plan = await PlanModel.findById(plan_id);
+  if (!plan) throw new NotFound("Plan not found");
+
+  // ✅ تحقق من المبلغ مقابل الأسعار في الـ plan
+  const validAmounts = [
+    plan.price_quarterly,
+    plan.price_semi_annually,
+    plan.price_annually,
+  ].filter((price) => price !== undefined && price !== null); // نشيل undefined/null
+
+  if (!validAmounts.includes(amount)) {
+    throw new BadRequest("Invalid payment amount for this plan");
+  }
+
+  // ✅ إنشاء الـ payment
+  const payment = await PaymentModel.create({
+    amount,
+    paymentmethod_id,
+    plan_id,
+    payment_date: new Date(),
+    userId,
+    status: "pending",
+  });
+
+  SuccessResponse(res, {
+    message: "Payment created successfully",
+    payment,
+  });
+};
+
 export const getAllPayments = async (req: Request, res: Response) => {
   if (!req.user) throw new UnauthorizedError("user is not authenticated");
 

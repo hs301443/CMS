@@ -6,17 +6,41 @@ const NotFound_1 = require("../../Errors/NotFound");
 const unauthorizedError_1 = require("../../Errors/unauthorizedError");
 const response_1 = require("../../utils/response");
 const payments_1 = require("../../models/shema/payments");
+const plans_1 = require("../../models/shema/plans");
 const createPayment = async (req, res) => {
     if (!req.user)
-        throw new unauthorizedError_1.UnauthorizedError("user is not authenticated");
+        throw new unauthorizedError_1.UnauthorizedError("User is not authenticated");
     const userId = req.user.id;
     const { plan_id, paymentmethod_id, amount } = req.body;
     if (!amount || !paymentmethod_id || !plan_id) {
         throw new BadRequest_1.BadRequest("Please provide all the required fields");
     }
-    ;
-    const paymentMethod = await payments_1.PaymentModel.create({ amount, paymentmethod_id, plan_id, payment_date: new Date(), userId, status: 'pending' });
-    (0, response_1.SuccessResponse)(res, { message: 'Payment created successfully', paymentMethod });
+    // ✅ تحقق من أن الـ plan موجود
+    const plan = await plans_1.PlanModel.findById(plan_id);
+    if (!plan)
+        throw new NotFound_1.NotFound("Plan not found");
+    // ✅ تحقق من المبلغ مقابل الأسعار في الـ plan
+    const validAmounts = [
+        plan.price_quarterly,
+        plan.price_semi_annually,
+        plan.price_annually,
+    ].filter((price) => price !== undefined && price !== null); // نشيل undefined/null
+    if (!validAmounts.includes(amount)) {
+        throw new BadRequest_1.BadRequest("Invalid payment amount for this plan");
+    }
+    // ✅ إنشاء الـ payment
+    const payment = await payments_1.PaymentModel.create({
+        amount,
+        paymentmethod_id,
+        plan_id,
+        payment_date: new Date(),
+        userId,
+        status: "pending",
+    });
+    (0, response_1.SuccessResponse)(res, {
+        message: "Payment created successfully",
+        payment,
+    });
 };
 exports.createPayment = createPayment;
 const getAllPayments = async (req, res) => {

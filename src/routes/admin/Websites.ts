@@ -4,7 +4,7 @@ import { catchAsync } from '../../utils/catchAsync';
 import { authenticated } from '../../middlewares/authenticated';
 
 const router = Router();
-router.put('/:id', authenticated, catchAsync(updateWebsiteStatus));
-router.get('/', authenticated, catchAsync(getAllWebsites));
-router.get('/:id', authenticated, catchAsync(getWebsiteById));
+router.put('/:id', catchAsync(updateWebsiteStatus));
+router.get('/', catchAsync(getAllWebsites));
+router.get('/:id', catchAsync(getWebsiteById));
 export default router;
