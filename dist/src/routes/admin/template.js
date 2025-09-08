@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const template_1 = require("../../controller/admin/template");
+const Multer_1 = require("../../utils/Multer");
+const router = (0, express_1.Router)();
+router.post("/", Multer_1.upload.single("template_file"), template_1.createTemplate);
+router.get("/", template_1.getAllTemplates);
+router.get("/:id", template_1.getTemplateById);
+router.patch("/:id", Multer_1.upload.single("template_file"), template_1.updateTemplate);
+router.delete("/:id", template_1.deleteTemplate);
+exports.default = router;

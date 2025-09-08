@@ -19,7 +19,7 @@ const getAllSubscriptions = async (req, res) => {
     if (!req.user)
         throw new unauthorizedError_1.UnauthorizedError('User not authenticated');
     const userId = req.user.id;
-    const subscriptions = await subscriptions_1.SubscriptionModel.find({ userId });
+    const subscriptions = await subscriptions_1.SubscriptionModel.find({ userId }).populate('planId').populate('PaymentId');
     if (!subscriptions)
         throw new NotFound_1.NotFound('No subscriptions found');
     (0, response_1.SuccessResponse)(res, { message: 'All subscriptions fetched successfully', subscriptions });
@@ -29,7 +29,7 @@ const getSubscriptionById = async (req, res) => {
     if (!req.user)
         throw new unauthorizedError_1.UnauthorizedError('User not authenticated');
     const { id } = req.params;
-    const subscription = await subscriptions_1.SubscriptionModel.findById(id);
+    const subscription = await subscriptions_1.SubscriptionModel.findById(id).populate('planId').populate('PaymentId');
     if (!subscription)
         throw new NotFound_1.NotFound('Subscription not found');
     (0, response_1.SuccessResponse)(res, { message: 'Subscription fetched successfully', subscription });

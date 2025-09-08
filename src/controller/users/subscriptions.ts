@@ -20,14 +20,14 @@ import { SuccessResponse } from '../../utils/response';
 export const getAllSubscriptions = async (req: Request, res: Response) => {
     if (!req.user) throw new UnauthorizedError('User not authenticated');
     const userId = req.user.id;
-    const subscriptions = await SubscriptionModel.find({ userId});
+    const subscriptions = await SubscriptionModel.find({ userId}).populate('planId').populate('PaymentId');
     if (!subscriptions) throw new NotFound('No subscriptions found');
     SuccessResponse(res, { message: 'All subscriptions fetched successfully', subscriptions });
 }
 export const getSubscriptionById = async (req: Request, res: Response) => {
     if (!req.user) throw new UnauthorizedError('User not authenticated');
     const { id } = req.params;
-    const subscription = await SubscriptionModel.findById(id);
+    const subscription = await SubscriptionModel.findById(id).populate('planId').populate('PaymentId');
     if (!subscription) throw new NotFound('Subscription not found');
     SuccessResponse(res, { message: 'Subscription fetched successfully', subscription });
 }

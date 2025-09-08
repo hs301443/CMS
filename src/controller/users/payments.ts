@@ -10,23 +10,43 @@ import { PaymentModel } from '../../models/shema/payments';
 export const createPayment = async (req: Request, res: Response) => {
     if (!req.user) throw new UnauthorizedError("user is not authenticated");
     const userId = req.user.id;
-    const {  amount, paymentMethodId } = req.body;
-    if (!amount || !paymentMethodId) throw new BadRequest('Please provide all the required fields');
-    const paymentMethod = await PaymentModel.create({  amount, paymentMethodId, userId , status: 'pending' });
+    const {  plan_id, paymentmethod_id, amount} = req.body;
+      if (!amount || !paymentmethod_id || !plan_id) {
+    throw new BadRequest("Please provide all the required fields")};
+    const paymentMethod = await PaymentModel.create({  amount, paymentmethod_id, plan_id,payment_date: new Date(), userId , status: 'pending' });
     SuccessResponse(res, { message: 'Payment created successfully', paymentMethod });
 }
 export const getAllPayments = async (req: Request, res: Response) => {
-    if (!req.user) throw new UnauthorizedError("user is not authenticated");
-    const userId = req.user.id; 
-    const payments = await PaymentModel.find({ userId }).populate('paymentmethod_id')
-    SuccessResponse(res, { message: 'All payments fetched successfully', payments });
-}
+  if (!req.user) throw new UnauthorizedError("user is not authenticated");
+
+  const payments = await PaymentModel.find({ userId: req.user.id })
+    .populate("paymentmethod_id")
+    .populate("plan_id"); // ✅ هنا جبنا تفاصيل البلان كمان
+
+  const pending = payments.filter(p => p.status === "pending");
+  const history = payments.filter(p => ["approved", "rejected"].includes(p.status));
+
+  SuccessResponse(res, {
+    message: "All payments fetched successfully",
+    payments: {
+      pending,
+      history,
+    },
+  });
+};
+
 export const getPaymentById = async (req: Request, res: Response) => {
-    if (!req.user) throw new UnauthorizedError("user is not authenticated");
-    const userId = req.user.id;
-    const { id } = req.params;
-    if (!id) throw new BadRequest('Please provide payment id');
-    const payment = await PaymentModel.findOne({ _id: id, userId }).populate('paymentmethod_id');
-    if (!payment) throw new NotFound('Payment not found');
-    SuccessResponse(res, { message: 'Payment fetched successfully', payment });
-}   
+  if (!req.user) throw new UnauthorizedError("user is not authenticated");
+  const userId = req.user.id;
+  const { id } = req.params;
+
+  if (!id) throw new BadRequest("Please provide payment id");
+
+  const payment = await PaymentModel.findOne({ _id: id, userId })
+    .populate("paymentmethod_id")
+    .populate("plan_id"); // ✅ جبت تفاصيل البلان برضه
+
+  if (!payment) throw new NotFound("Payment not found");
+
+  SuccessResponse(res, { message: "Payment fetched successfully", payment });
+};
