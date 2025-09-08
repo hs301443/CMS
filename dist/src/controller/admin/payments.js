@@ -59,12 +59,11 @@ const updatePayment = async (req, res) => {
         payment.rejected_reason = rejected_reason || "No reason provided";
     }
     await payment.save();
-    // ✅ If approved → create subscription
     if (status === "approved") {
-        const plan = payment.plan_id; // populated plan
+        const plan = payment.plan_id;
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setMonth(startDate.getMonth() + (plan.durationMonths || 1)); // 👈 لازم يكون عندك مدة البلان
+        endDate.setMonth(startDate.getMonth() + (plan.durationMonths || 1));
         await subscriptions_1.SubscriptionModel.create({
             userId: payment.userId,
             planId: payment.plan_id,
@@ -72,7 +71,7 @@ const updatePayment = async (req, res) => {
             startDate,
             endDate,
             websites_created_count: 0,
-            websites_remaining_count: plan.websites_limit || 0, // 👈 لازم البلان فيه limit
+            websites_remaining_count: plan.websites_limit || 0,
         });
     }
     (0, response_1.SuccessResponse)(res, { message: "Payment status updated successfully", payment });

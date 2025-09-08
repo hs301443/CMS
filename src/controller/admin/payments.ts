@@ -66,12 +66,11 @@ export const updatePayment = async (req: Request, res: Response) => {
   }
   await payment.save();
 
-  // ✅ If approved → create subscription
   if (status === "approved") {
-    const plan: any = payment.plan_id; // populated plan
+    const plan: any = payment.plan_id; 
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setMonth(startDate.getMonth() + (plan.durationMonths || 1)); // 👈 لازم يكون عندك مدة البلان
+    endDate.setMonth(startDate.getMonth() + (plan.durationMonths || 1)); 
 
     await SubscriptionModel.create({
       userId: payment.userId,
@@ -79,8 +78,8 @@ export const updatePayment = async (req: Request, res: Response) => {
       PaymentId: payment._id,
       startDate,
       endDate,
-      websites_created_count: 0,
-      websites_remaining_count: plan.websites_limit || 0, // 👈 لازم البلان فيه limit
+      websites_created_count: 0,    
+      websites_remaining_count: plan.websites_limit || 0, 
     });
   }
 

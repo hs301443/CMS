@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const Websites_1 = require("../../controller/admin/Websites");
+const catchAsync_1 = require("../../utils/catchAsync");
+const authenticated_1 = require("../../middlewares/authenticated");
+const router = (0, express_1.Router)();
+router.put('/:id', authenticated_1.authenticated, (0, catchAsync_1.catchAsync)(Websites_1.updateWebsiteStatus));
+router.get('/', authenticated_1.authenticated, (0, catchAsync_1.catchAsync)(Websites_1.getAllWebsites));
+router.get('/:id', authenticated_1.authenticated, (0, catchAsync_1.catchAsync)(Websites_1.getWebsiteById));
+exports.default = router;
