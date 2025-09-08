@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import {updateWebsiteStatus,getAllWebsites,getWebsiteById  } from '../../controller/admin/Websites';
 import { catchAsync } from '../../utils/catchAsync';
-import { authenticated } from '../../middlewares/authenticated';
 
 const router = Router();
 router.put('/:id', catchAsync(updateWebsiteStatus));

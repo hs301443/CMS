@@ -9,13 +9,12 @@ import { Request, Response } from "express";
 export const createWebsite = async (req: Request, res: Response) => {
   if (!req.user) throw new UnauthorizedError("User not authenticated");
 
-  const { templateId, activitiesId, demo_link, project_path } = req.body;
-
+  const { templateId, activitiesId, demo_link } = req.body;
+const project_path = req.file?.path; 
   if (!templateId || !demo_link || !project_path || !activitiesId) {
     throw new BadRequest("Please provide all required fields");
   }
 
-  // 🔹 1. نجيب subscription الخاص باليوزر
   const subscription = await SubscriptionModel.findOne({ userId: req.user.id })
     .sort({ createdAt: -1 });
 
@@ -23,12 +22,10 @@ export const createWebsite = async (req: Request, res: Response) => {
     throw new BadRequest("You do not have an active subscription");
   }
 
-  // 🔹 2. نعمل تشيك على الـ remaining
   if (subscription.websites_remaining_count <= 0) {
     throw new BadRequest("You have reached your website creation limit");
   }
 
-  // 🔹 3. نعمل Website جديد بالـ start_date = now و end_date = subscription.endDate
   const newWebsite = await WebsiteModel.create({
     userId: req.user.id,
     templateId,
@@ -40,7 +37,6 @@ export const createWebsite = async (req: Request, res: Response) => {
     status: "pending_admin_review",
   });
 
-  // 🔹 4. نحدّث الـ subscription
   subscription.websites_created_count += 1;
   subscription.websites_remaining_count -= 1;
   await subscription.save();

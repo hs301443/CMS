@@ -10,21 +10,19 @@ const response_1 = require("../../utils/response");
 const createWebsite = async (req, res) => {
     if (!req.user)
         throw new index_1.UnauthorizedError("User not authenticated");
-    const { templateId, activitiesId, demo_link, project_path } = req.body;
+    const { templateId, activitiesId, demo_link } = req.body;
+    const project_path = req.file?.path;
     if (!templateId || !demo_link || !project_path || !activitiesId) {
         throw new BadRequest_1.BadRequest("Please provide all required fields");
     }
-    // 🔹 1. نجيب subscription الخاص باليوزر
     const subscription = await subscriptions_1.SubscriptionModel.findOne({ userId: req.user.id })
         .sort({ createdAt: -1 });
     if (!subscription) {
         throw new BadRequest_1.BadRequest("You do not have an active subscription");
     }
-    // 🔹 2. نعمل تشيك على الـ remaining
     if (subscription.websites_remaining_count <= 0) {
         throw new BadRequest_1.BadRequest("You have reached your website creation limit");
     }
-    // 🔹 3. نعمل Website جديد بالـ start_date = now و end_date = subscription.endDate
     const newWebsite = await websites_1.WebsiteModel.create({
         userId: req.user.id,
         templateId,
@@ -35,7 +33,6 @@ const createWebsite = async (req, res) => {
         end_date: subscription.endDate,
         status: "pending_admin_review",
     });
-    // 🔹 4. نحدّث الـ subscription
     subscription.websites_created_count += 1;
     subscription.websites_remaining_count -= 1;
     await subscription.save();

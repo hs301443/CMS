@@ -9,10 +9,10 @@ const unauthorizedError_1 = require("../../Errors/unauthorizedError");
 const createPlan = async (req, res) => {
     if (!req.user || req.user.role !== 'admin')
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
-    const { name, price_quarterly, price_semi_annually, price_annually, website_limit } = req.body;
-    if (!name || !price_quarterly || !price_semi_annually || !price_annually || !website_limit)
+    const { name, price_monthly, price_quarterly, price_semi_annually, price_annually, website_limit } = req.body;
+    if (!name || !price_quarterly || !price_semi_annually || !price_annually || !website_limit || !price_monthly)
         throw new BadRequest_1.BadRequest('Please provide all the required fields');
-    const plan = await plans_1.PlanModel.create({ name, price_quarterly, price_semi_annually, price_annually, website_limit });
+    const plan = await plans_1.PlanModel.create({ name, price_quarterly, price_semi_annually, price_annually, website_limit, price_monthly });
     (0, response_1.SuccessResponse)(res, { message: 'Plan created successfully', plan });
 };
 exports.createPlan = createPlan;

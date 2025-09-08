@@ -8,9 +8,9 @@ import { UnauthorizedError } from '../../Errors/unauthorizedError';
 export const createPlan = async (req: Request, res: Response) => {
     if (!req.user || req.user.role !== 'admin')  throw new UnauthorizedError("Access denied");
 
-   const { name, price_quarterly, price_semi_annually, price_annually, website_limit } = req.body;
-   if(!name || !price_quarterly || !price_semi_annually || !price_annually || !website_limit) throw new BadRequest('Please provide all the required fields');
-   const plan = await PlanModel.create({ name, price_quarterly, price_semi_annually, price_annually, website_limit });
+   const { name,price_monthly ,price_quarterly, price_semi_annually, price_annually, website_limit } = req.body;
+   if(!name || !price_quarterly || !price_semi_annually || !price_annually || !website_limit || !price_monthly) throw new BadRequest('Please provide all the required fields');
+   const plan = await PlanModel.create({ name, price_quarterly, price_semi_annually, price_annually, website_limit,price_monthly});
      SuccessResponse(res, { message: 'Plan created successfully',plan })
 };
 
