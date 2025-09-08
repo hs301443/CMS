@@ -19,14 +19,14 @@ export const createActivity = async (req: Request, res: Response) => {
 }
 export const getAllActivities = async (req: Request, res: Response) => {
     if (!req.user || req.user.role !== 'admin')  throw new UnauthorizedError("Access denied");
-    const activities = await ActivityModel.find();
+    const activities = await ActivityModel.find().populate("templates");
     SuccessResponse(res, { message: "All activities fetched successfully", activities });
 }
 export const getActivityById = async (req: Request, res: Response) => {
     if (!req.user || req.user.role !== 'admin')  throw new UnauthorizedError("Access denied");
     const { id } = req.params;
     if (!id)  throw new BadRequest("Please provide activity id");
-    const activity = await ActivityModel.findById(id);
+    const activity = await ActivityModel.findById(id).populate("templates");
     if (!activity)  throw new NotFound("Activity not found");
       
     SuccessResponse(res, { message: "Activity fetched successfully", activity });

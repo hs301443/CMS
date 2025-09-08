@@ -9,7 +9,7 @@ export const createTemplate = async (req: Request, res: Response) => {
   if (!req.user || req.user.role !== "admin")
     throw new UnauthorizedError("Access denied");
 
-  const { name } = req.body;
+  const { name ,activityId} = req.body;
 
   if (!name) throw new BadRequest("name is required");
   const file = req.file;
@@ -18,6 +18,7 @@ export const createTemplate = async (req: Request, res: Response) => {
   const newTemplate = await TemplateModel.create({
     name,
     template_file_path: file.path, 
+    activityId
     });
 
   SuccessResponse(res, {
@@ -30,7 +31,7 @@ export const createTemplate = async (req: Request, res: Response) => {
 
 export const getAllTemplates =async (req: Request, res: Response) => {
      if (!req.user || req.user.role !== 'admin')  throw new UnauthorizedError("Access denied");
-    const template = await TemplateModel.find();
+    const template = await TemplateModel.find().populate('activityId','name isActive');
     if(!template) throw new NotFound("Template not found")
 
 SuccessResponse(res,{message:"get template successfully",template})
@@ -43,7 +44,7 @@ export const updateTemplate = async (req: Request, res: Response) => {
   }
 
   const { id } = req.params;
-  const { name } = req.body;
+  const { name,activityId } = req.body;
   const file = req.file; // لو عايز تعدل الملف
 
   if (!id) throw new BadRequest("Template ID is required");
@@ -52,6 +53,7 @@ export const updateTemplate = async (req: Request, res: Response) => {
   const updateData: any = {};
   if (name) updateData.name = name;
   if (file) updateData.template_file_path = file.path;
+  if (activityId) updateData.activityId = activityId;
 
   const template = await TemplateModel.findByIdAndUpdate(
     id,
@@ -70,7 +72,7 @@ export const getTemplateById = async (req: Request, res: Response) => {
   const { id } = req.params;
   if (!id) throw new BadRequest("ID is required");
 
-  const template = await TemplateModel.findById(id);
+  const template = await TemplateModel.findById(id).populate('activityId','name isActive');
   if (!template) throw new NotFound("Template not found");
 
   SuccessResponse(res, { message: "get template successfully", template });

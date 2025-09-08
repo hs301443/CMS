@@ -21,7 +21,7 @@ exports.createActivity = createActivity;
 const getAllActivities = async (req, res) => {
     if (!req.user || req.user.role !== 'admin')
         throw new Errors_2.UnauthorizedError("Access denied");
-    const activities = await activities_1.ActivityModel.find();
+    const activities = await activities_1.ActivityModel.find().populate("templates");
     (0, response_1.SuccessResponse)(res, { message: "All activities fetched successfully", activities });
 };
 exports.getAllActivities = getAllActivities;
@@ -31,7 +31,7 @@ const getActivityById = async (req, res) => {
     const { id } = req.params;
     if (!id)
         throw new BadRequest_1.BadRequest("Please provide activity id");
-    const activity = await activities_1.ActivityModel.findById(id);
+    const activity = await activities_1.ActivityModel.findById(id).populate("templates");
     if (!activity)
         throw new Errors_1.NotFound("Activity not found");
     (0, response_1.SuccessResponse)(res, { message: "Activity fetched successfully", activity });

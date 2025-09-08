@@ -9,5 +9,7 @@ const TemplateSchema = new mongoose_1.default.Schema({
     name: { type: String, required: true },
     template_file_path: { type: String, required: true },
     isActive: { type: Boolean, default: true },
+    isNew: { type: Boolean, default: true },
+    activityId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Activity", required: true },
 }, { timestamps: true });
 exports.TemplateModel = mongoose_1.default.model('Template', TemplateSchema);

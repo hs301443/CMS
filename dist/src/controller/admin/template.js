@@ -9,7 +9,7 @@ const response_1 = require("../../utils/response");
 const createTemplate = async (req, res) => {
     if (!req.user || req.user.role !== "admin")
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
-    const { name } = req.body;
+    const { name, activityId } = req.body;
     if (!name)
         throw new BadRequest_1.BadRequest("name is required");
     const file = req.file;
@@ -18,6 +18,7 @@ const createTemplate = async (req, res) => {
     const newTemplate = await templates_1.TemplateModel.create({
         name,
         template_file_path: file.path,
+        activityId
     });
     (0, response_1.SuccessResponse)(res, {
         message: "template created successfully",
@@ -28,7 +29,7 @@ exports.createTemplate = createTemplate;
 const getAllTemplates = async (req, res) => {
     if (!req.user || req.user.role !== 'admin')
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
-    const template = await templates_1.TemplateModel.find();
+    const template = await templates_1.TemplateModel.find().populate('activityId', 'name isActive');
     if (!template)
         throw new NotFound_1.NotFound("Template not found");
     (0, response_1.SuccessResponse)(res, { message: "get template successfully", template });
@@ -39,7 +40,7 @@ const updateTemplate = async (req, res) => {
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
     }
     const { id } = req.params;
-    const { name } = req.body;
+    const { name, activityId } = req.body;
     const file = req.file; // لو عايز تعدل الملف
     if (!id)
         throw new BadRequest_1.BadRequest("Template ID is required");
@@ -49,6 +50,8 @@ const updateTemplate = async (req, res) => {
         updateData.name = name;
     if (file)
         updateData.template_file_path = file.path;
+    if (activityId)
+        updateData.activityId = activityId;
     const template = await templates_1.TemplateModel.findByIdAndUpdate(id, { $set: updateData }, { new: true } // يرجع التيمبلت بعد التحديث
     );
     if (!template)
@@ -62,7 +65,7 @@ const getTemplateById = async (req, res) => {
     const { id } = req.params;
     if (!id)
         throw new BadRequest_1.BadRequest("ID is required");
-    const template = await templates_1.TemplateModel.findById(id);
+    const template = await templates_1.TemplateModel.findById(id).populate('activityId', 'name isActive');
     if (!template)
         throw new NotFound_1.NotFound("Template not found");
     (0, response_1.SuccessResponse)(res, { message: "get template successfully", template });
