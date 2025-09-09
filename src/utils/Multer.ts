@@ -12,15 +12,15 @@ const templateStorage = multer.diskStorage({
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    // نخلي الاسم unique وفيه اسم الـ field
+    const uniqueName = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
   },
 });
 
-// ✅ هنا خلينا نستخدم fields بدل single
 export const uploadTemplate = multer({ storage: templateStorage });
 
-
-// 📌 تخزين ملفات الـ Websites (زي ما هي)
+// 📌 تخزين ملفات الـ Websites
 const websiteStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = path.join(__dirname, "../uploads/websites");
@@ -30,7 +30,8 @@ const websiteStorage = multer.diskStorage({
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    const uniqueName = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
   },
 });
 

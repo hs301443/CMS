@@ -6,13 +6,13 @@ const router =Router();
 
 router.post("/",  uploadTemplate.fields([
     { name: "template_file_path", maxCount: 1 },
-    { name: "photo", maxCount: 2 },
+    { name: "photo", maxCount:  1 },
   ]), catchAsync(createTemplate));
 router.get("/", catchAsync(getAllTemplates));
 router.get("/:id", catchAsync(getTemplateById));
 router.patch("/:id",  uploadTemplate.fields([
     { name: "template_file_path", maxCount: 1 },
-    { name: "photo", maxCount: 2 },
+    { name: "photo", maxCount: 1 },
   ]), catchAsync(updateTemplate));
 router.delete("/:id", catchAsync(deleteTemplate));
 

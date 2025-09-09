@@ -7,7 +7,10 @@ exports.updateTemplateSchema = exports.createTemplateSchema = void 0;
 const joi_1 = __importDefault(require("joi"));
 exports.createTemplateSchema = joi_1.default.object({
     name: joi_1.default.string().min(3).max(100).required(),
+    activityId: joi_1.default.string().required(),
     isActive: joi_1.default.boolean().default(true),
+    photo: joi_1.default.string().optional(),
+    file_template_path: joi_1.default.string().optional(),
 });
 exports.updateTemplateSchema = joi_1.default.object({
     name: joi_1.default.string().min(3).max(100),
