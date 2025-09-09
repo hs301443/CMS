@@ -9,4 +9,6 @@ const router = (0, express_1.Router)();
 router.post('/', authenticated_1.authenticated, Multer_1.uploadWebsite.single("project_path"), (0, catchAsync_1.catchAsync)(Websites_1.createWebsite));
 router.get('/', authenticated_1.authenticated, (0, catchAsync_1.catchAsync)(Websites_1.getAllWebsites));
 router.get('/:id', authenticated_1.authenticated, (0, catchAsync_1.catchAsync)(Websites_1.getWebsiteById));
+router.delete('/:websiteId', authenticated_1.authenticated, (0, catchAsync_1.catchAsync)(Websites_1.deleteWebsite));
+router.put('/:websiteId', authenticated_1.authenticated, Multer_1.uploadWebsite.single("project_path"), (0, catchAsync_1.catchAsync)(Websites_1.updateWebsite));
 exports.default = router;

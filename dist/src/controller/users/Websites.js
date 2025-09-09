@@ -13,6 +13,7 @@ const response_1 = require("../../utils/response");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const templates_1 = require("../../models/shema/templates");
+const mongoose_1 = __importDefault(require("mongoose"));
 const createWebsite = async (req, res) => {
     if (!req.user)
         throw new index_1.UnauthorizedError("User not authenticated");
@@ -20,18 +21,24 @@ const createWebsite = async (req, res) => {
     if (!templateId || !demo_link || !activitiesId) {
         throw new BadRequest_1.BadRequest("Please provide all required fields");
     }
+    // ✅ تأكد من وجود التيمبلت
     const template = await templates_1.TemplateModel.findById(templateId);
-    if (!template) {
+    if (!template)
         throw new BadRequest_1.BadRequest("Template not found");
-    }
-    const subscription = await subscriptions_1.SubscriptionModel.findOne({ userId: req.user.id })
-        .sort({ createdAt: -1 });
+    // ✅ هات الاشتراك الـ active بس
+    const subscription = await subscriptions_1.SubscriptionModel.findOne({
+        userId: req.user.id,
+        status: "active",
+        endDate: { $gte: new Date() },
+    }).sort({ createdAt: -1 });
     if (!subscription) {
         throw new BadRequest_1.BadRequest("You do not have an active subscription");
     }
+    // ✅ شيك على عدد المواقع المتاحة
     if (subscription.websites_remaining_count <= 0) {
         throw new BadRequest_1.BadRequest("You have reached your website creation limit");
     }
+    // ✅ اعمل نسخة من التيمبلت
     const websiteId = new Date().getTime();
     const websitesDir = path_1.default.join(__dirname, "../uploads/websites", String(websiteId));
     if (!fs_1.default.existsSync(websitesDir)) {
@@ -39,6 +46,7 @@ const createWebsite = async (req, res) => {
     }
     const copiedTemplatePath = path_1.default.join(websitesDir, path_1.default.basename(template.template_file_path));
     fs_1.default.copyFileSync(template.template_file_path, copiedTemplatePath);
+    // ✅ أنشئ الويبسايت الجديد
     const newWebsite = await websites_1.WebsiteModel.create({
         userId: req.user.id,
         templateId,
@@ -49,6 +57,7 @@ const createWebsite = async (req, res) => {
         end_date: subscription.endDate,
         status: "pending_admin_review",
     });
+    // ✅ عدّل الاشتراك
     subscription.websites_created_count += 1;
     subscription.websites_remaining_count -= 1;
     await subscription.save();
@@ -89,10 +98,25 @@ const updateWebsite = async (req, res) => {
         throw new index_1.UnauthorizedError("User not authenticated");
     const { websiteId } = req.params;
     const { demo_link, status, rejected_reason } = req.body;
-    const website = await websites_1.WebsiteModel.findOne({ _id: websiteId, userId: req.user.id });
+    let website;
+    try {
+        website = await websites_1.WebsiteModel.findOne({
+            _id: new mongoose_1.default.Types.ObjectId(websiteId),
+            userId: new mongoose_1.default.Types.ObjectId(req.user.id),
+        });
+    }
+    catch (err) {
+        console.error("❌ Error converting IDs:", err);
+        throw new BadRequest_1.BadRequest("Invalid website ID format");
+    }
     if (!website) {
+        console.log("❌ Website not found with query:", {
+            websiteId,
+            userId: req.user.id,
+        });
         throw new BadRequest_1.BadRequest("Website not found or you do not own it");
     }
+    // ✅ Debug website.userId
     if (demo_link)
         website.demo_link = demo_link;
     if (status)
@@ -116,7 +140,10 @@ const deleteWebsite = async (req, res) => {
     if (!req.user)
         throw new index_1.UnauthorizedError("User not authenticated");
     const { websiteId } = req.params;
-    const website = await websites_1.WebsiteModel.findOne({ _id: websiteId, userId: req.user.id });
+    const website = await websites_1.WebsiteModel.findOne({
+        _id: new mongoose_1.default.Types.ObjectId(websiteId),
+        userId: new mongoose_1.default.Types.ObjectId(req.user.id),
+    });
     if (!website) {
         throw new BadRequest_1.BadRequest("Website not found or you do not own it");
     }

@@ -1,3 +1,4 @@
 node_modules
 .env 
 src/uploads
+dist/src/uploads

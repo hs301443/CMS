@@ -7,6 +7,7 @@ exports.UpdateplanSchema = exports.CreateplanSchema = void 0;
 const joi_1 = __importDefault(require("joi"));
 exports.CreateplanSchema = joi_1.default.object({
     name: joi_1.default.string().required(),
+    price_monthly: joi_1.default.number().optional(),
     price_quarterly: joi_1.default.number().optional(),
     price_semi_annually: joi_1.default.number().optional(),
     price_annually: joi_1.default.number().optional(),
@@ -14,6 +15,7 @@ exports.CreateplanSchema = joi_1.default.object({
 });
 exports.UpdateplanSchema = joi_1.default.object({
     name: joi_1.default.string().optional(),
+    price_monthly: joi_1.default.number().optional(),
     price_quarterly: joi_1.default.number().optional(),
     price_semi_annually: joi_1.default.number().optional(),
     price_annually: joi_1.default.number().optional(),

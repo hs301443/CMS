@@ -8,6 +8,7 @@ import { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
 import { TemplateModel } from "../../models/shema/templates";
+import mongoose from "mongoose";
 export const createWebsite = async (req: Request, res: Response) => {
   if (!req.user) throw new UnauthorizedError("User not authenticated");
 
@@ -16,22 +17,26 @@ export const createWebsite = async (req: Request, res: Response) => {
     throw new BadRequest("Please provide all required fields");
   }
 
+  // ✅ تأكد من وجود التيمبلت
   const template = await TemplateModel.findById(templateId);
-  if (!template) {
-    throw new BadRequest("Template not found");
-  }
+  if (!template) throw new BadRequest("Template not found");
 
-  const subscription = await SubscriptionModel.findOne({ userId: req.user.id })
-    .sort({ createdAt: -1 });
+  // ✅ هات الاشتراك الـ active بس
+  const subscription = await SubscriptionModel.findOne({
+    userId: req.user.id,
+    status: "active",
+    endDate: { $gte: new Date() },
+  }).sort({ createdAt: -1 });
 
   if (!subscription) {
     throw new BadRequest("You do not have an active subscription");
   }
 
+  // ✅ شيك على عدد المواقع المتاحة
   if (subscription.websites_remaining_count <= 0) {
     throw new BadRequest("You have reached your website creation limit");
   }
-
+  // ✅ اعمل نسخة من التيمبلت
   const websiteId = new Date().getTime();
   const websitesDir = path.join(__dirname, "../uploads/websites", String(websiteId));
   if (!fs.existsSync(websitesDir)) {
@@ -41,17 +46,19 @@ export const createWebsite = async (req: Request, res: Response) => {
   const copiedTemplatePath = path.join(websitesDir, path.basename(template.template_file_path));
   fs.copyFileSync(template.template_file_path, copiedTemplatePath);
 
+  // ✅ أنشئ الويبسايت الجديد
   const newWebsite = await WebsiteModel.create({
     userId: req.user.id,
     templateId,
     activitiesId,
     demo_link,
-    project_path: copiedTemplatePath,   
+    project_path: copiedTemplatePath,
     start_date: new Date(),
     end_date: subscription.endDate,
     status: "pending_admin_review",
   });
 
+  // ✅ عدّل الاشتراك
   subscription.websites_created_count += 1;
   subscription.websites_remaining_count -= 1;
   await subscription.save();
@@ -89,10 +96,27 @@ export const updateWebsite = async (req: Request, res: Response) => {
   const { websiteId } = req.params;
   const { demo_link, status, rejected_reason } = req.body;
 
-  const website = await WebsiteModel.findOne({ _id: websiteId, userId: req.user.id });
+  let website;
+  try {
+   
+    website = await WebsiteModel.findOne({
+      _id: new mongoose.Types.ObjectId(websiteId),
+      userId: new mongoose.Types.ObjectId(req.user.id),
+    });
+  } catch (err) {
+    console.error("❌ Error converting IDs:", err);
+    throw new BadRequest("Invalid website ID format");
+  }
+
   if (!website) {
+    console.log("❌ Website not found with query:", {
+      websiteId,
+      userId: req.user.id,
+    });
     throw new BadRequest("Website not found or you do not own it");
   }
+
+  // ✅ Debug website.userId
 
   if (demo_link) website.demo_link = demo_link;
   if (status) website.status = status;
@@ -102,7 +126,6 @@ export const updateWebsite = async (req: Request, res: Response) => {
     if (fs.existsSync(website.project_path)) {
       fs.unlinkSync(website.project_path);
     }
-
     website.project_path = req.file.path;
   }
 
@@ -114,13 +137,17 @@ export const updateWebsite = async (req: Request, res: Response) => {
   });
 };
 
+
+
 export const deleteWebsite = async (req: Request, res: Response) => {
   if (!req.user) throw new UnauthorizedError("User not authenticated");
 
   const { websiteId } = req.params;
 
-  const website = await WebsiteModel.findOne({ _id: websiteId, userId: req.user.id });
-  if (!website) {
+const website = await WebsiteModel.findOne({
+  _id: new mongoose.Types.ObjectId(websiteId),
+  userId: new mongoose.Types.ObjectId(req.user.id),
+});  if (!website) {
     throw new BadRequest("Website not found or you do not own it");
   }
 
