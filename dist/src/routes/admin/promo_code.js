@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const promo_code_1 = require("../../controller/admin/promo_code");
+const catchAsync_1 = require("../../utils/catchAsync");
+const router = (0, express_1.Router)();
+router.post('/', (0, catchAsync_1.catchAsync)(promo_code_1.createpromoCode));
+router.get('/', (0, catchAsync_1.catchAsync)(promo_code_1.getAllPromoCode));
+router.get('/:id', (0, catchAsync_1.catchAsync)(promo_code_1.getPromoCodeById));
+router.put('/:id', (0, catchAsync_1.catchAsync)(promo_code_1.updatePromoCode));
+router.delete('/:id', (0, catchAsync_1.catchAsync)(promo_code_1.deletePromoCode));
+exports.default = router;

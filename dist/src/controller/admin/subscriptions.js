@@ -8,7 +8,7 @@ const unauthorizedError_1 = require("../../Errors/unauthorizedError");
 const response_1 = require("../../utils/response");
 const getAllSubscription = async (req, res) => {
     if (!req.user || req.user.role !== 'admin')
-        throw new unauthorizedError_1.UnauthorizedError('User not authenticated');
+        throw new unauthorizedError_1.UnauthorizedError('access denied');
     const data = await subscriptions_1.SubscriptionModel.find().populate('userId').populate('planId').populate('PaymentId');
     if (!data)
         throw new NotFound_1.NotFound('No subscription found');
@@ -17,7 +17,7 @@ const getAllSubscription = async (req, res) => {
 exports.getAllSubscription = getAllSubscription;
 const getSubscriptionById = async (req, res) => {
     if (!req.user || req.user.role !== 'admin')
-        throw new unauthorizedError_1.UnauthorizedError('User not authenticated');
+        throw new unauthorizedError_1.UnauthorizedError('access denied');
     const { id } = req.params;
     if (!id)
         throw new BadRequest_1.BadRequest('Please provide subscription id');
