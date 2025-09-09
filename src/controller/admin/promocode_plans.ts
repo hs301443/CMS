@@ -7,10 +7,10 @@ import { UnauthorizedError } from '../../Errors/unauthorizedError';
 
 export const createPromoCodePLan = async (req: Request, res: Response) => {
     if(!req.user|| req.user.role !=='admin') throw new UnauthorizedError('access denied');
-    const {planId,promocodeId}=req.body;
-    if(!planId||!promocodeId) throw new BadRequest('Please provide all the required fields');
-    if(promocodeId.end_date()>new Date()) throw new BadRequest('Promo code is not expired');
-    const data = await PromoCodePlanModel.create({planId,promocodeId});
+    const {planId,codeId,applies_to_monthly,applies_to_quarterly,applies_to_semi_annually,applies_to_yearly}=req.body;
+    if(!planId||!codeId) throw new BadRequest('Please provide all the required fields');
+    if(codeId.end_date>new Date()) throw new BadRequest('Promo code is not expired');
+    const data = await PromoCodePlanModel.create({planId,codeId,applies_to_monthly,applies_to_quarterly,applies_to_semi_annually,applies_to_yearly});
     SuccessResponse(res, { message: 'Promo Code Plan created successfully', data });
 };
 

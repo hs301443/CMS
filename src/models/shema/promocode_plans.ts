@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const promocode_planSchema = new mongoose.Schema({
-    promocodeId: { type: mongoose.Schema.Types.ObjectId, ref: 'PromoCode', required: true },
+    codeId: { type: mongoose.Schema.Types.ObjectId, ref: 'PromoCode', required: true },
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan', required: true },
     applies_to_monthly:{type: Boolean, default: false},
     applies_to_quarterly:{type: Boolean, default: false},

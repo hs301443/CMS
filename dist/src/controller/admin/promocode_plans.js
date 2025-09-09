@@ -9,12 +9,12 @@ const unauthorizedError_1 = require("../../Errors/unauthorizedError");
 const createPromoCodePLan = async (req, res) => {
     if (!req.user || req.user.role !== 'admin')
         throw new unauthorizedError_1.UnauthorizedError('access denied');
-    const { planId, promocodeId } = req.body;
-    if (!planId || !promocodeId)
+    const { planId, codeId, applies_to_monthly, applies_to_quarterly, applies_to_semi_annually, applies_to_yearly } = req.body;
+    if (!planId || !codeId)
         throw new BadRequest_1.BadRequest('Please provide all the required fields');
-    if (promocodeId.end_date() > new Date())
+    if (codeId.end_date > new Date())
         throw new BadRequest_1.BadRequest('Promo code is not expired');
-    const data = await promocode_plans_1.PromoCodePlanModel.create({ planId, promocodeId });
+    const data = await promocode_plans_1.PromoCodePlanModel.create({ planId, codeId, applies_to_monthly, applies_to_quarterly, applies_to_semi_annually, applies_to_yearly });
     (0, response_1.SuccessResponse)(res, { message: 'Promo Code Plan created successfully', data });
 };
 exports.createPromoCodePLan = createPromoCodePLan;

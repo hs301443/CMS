@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PromoCodePlanModel = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const promocode_planSchema = new mongoose_1.default.Schema({
-    promocodeId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'PromoCode', required: true },
+    codeId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'PromoCode', required: true },
     planId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Plan', required: true },
     applies_to_monthly: { type: Boolean, default: false },
     applies_to_quarterly: { type: Boolean, default: false },
