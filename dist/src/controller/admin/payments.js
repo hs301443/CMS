@@ -7,6 +7,7 @@ const unauthorizedError_1 = require("../../Errors/unauthorizedError");
 const response_1 = require("../../utils/response");
 const subscriptions_1 = require("../../models/shema/subscriptions");
 const payments_1 = require("../../models/shema/payments");
+const User_1 = require("../../models/shema/auth/User");
 const getAllPaymentsAdmin = async (req, res) => {
     if (!req.user || req.user.role !== "admin")
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
@@ -61,30 +62,72 @@ const updatePayment = async (req, res) => {
     await payment.save();
     if (status === "approved") {
         const plan = payment.plan_id;
-        const startDate = new Date();
-        const endDate = new Date();
+        const user = await User_1.UserModel.findById(payment.userId);
+        if (!user)
+            throw new NotFound_1.NotFound("User not found");
         // نحدد المدة حسب الـ amount اللي دفعه
+        let monthsToAdd = 0;
         if (payment.amount === plan.price_quarterly) {
-            endDate.setMonth(startDate.getMonth() + 3);
+            monthsToAdd = 3;
         }
         else if (payment.amount === plan.price_semi_annually) {
-            endDate.setMonth(startDate.getMonth() + 6);
+            monthsToAdd = 6;
         }
         else if (payment.amount === plan.price_annually) {
-            endDate.setMonth(startDate.getMonth() + 12);
+            monthsToAdd = 12;
         }
         else {
             throw new BadRequest_1.BadRequest("Invalid payment amount for this plan");
         }
-        await subscriptions_1.SubscriptionModel.create({
-            userId: payment.userId,
-            planId: payment.plan_id,
-            PaymentId: payment._id,
-            startDate,
-            endDate,
-            websites_created_count: 0,
-            websites_remaining_count: plan.website_limit || 0,
-        });
+        // 1- لو user.planId = null → أول اشتراك
+        if (!user.planId) {
+            const startDate = new Date();
+            const endDate = new Date();
+            endDate.setMonth(startDate.getMonth() + monthsToAdd);
+            await subscriptions_1.SubscriptionModel.create({
+                userId: user._id,
+                planId: plan._id,
+                PaymentId: payment._id,
+                startDate,
+                endDate,
+                status: "active",
+                websites_created_count: 0,
+                websites_remaining_count: plan.website_limit || 0,
+            });
+            user.planId = plan._id;
+            await user.save();
+        }
+        // 2- نفس الخطة → نمد الاشتراك الحالي
+        else if (user.planId.toString() === plan._id.toString()) {
+            const subscription = await subscriptions_1.SubscriptionModel.findOne({
+                userId: user._id,
+                planId: plan._id,
+                status: "active",
+            }).sort({ createdAt: -1 });
+            if (!subscription)
+                throw new NotFound_1.NotFound("Active subscription not found");
+            subscription.endDate.setMonth(subscription.endDate.getMonth() + monthsToAdd);
+            await subscription.save();
+        }
+        // 3- خطة مختلفة → نخلي القديم expired وننشئ جديد
+        else {
+            await subscriptions_1.SubscriptionModel.updateMany({ userId: user._id, status: "active" }, { $set: { status: "expired" } });
+            const startDate = new Date();
+            const endDate = new Date();
+            endDate.setMonth(startDate.getMonth() + monthsToAdd);
+            await subscriptions_1.SubscriptionModel.create({
+                userId: user._id,
+                planId: plan._id,
+                PaymentId: payment._id,
+                startDate,
+                endDate,
+                status: "active",
+                websites_created_count: 0,
+                websites_remaining_count: plan.website_limit || 0,
+            });
+            user.planId = plan._id;
+            await user.save();
+        }
     }
     (0, response_1.SuccessResponse)(res, { message: "Payment status updated successfully", payment });
 };

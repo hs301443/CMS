@@ -10,13 +10,11 @@ const activitySchema = new mongoose_1.default.Schema({
     name: { type: String, required: true },
     isActive: { type: Boolean, default: true }
 }, { timestamps: true });
-// 🔗 Virtual populate
 activitySchema.virtual("templates", {
     ref: "Template",
     localField: "_id",
     foreignField: "activityId",
 });
-// ✅ إعدادات الإخراج
 activitySchema.set("toJSON", {
     virtuals: true,
     versionKey: false,
@@ -25,6 +23,5 @@ activitySchema.set("toObject", {
     virtuals: true,
     versionKey: false,
 });
-// ✅ إلغاء توليد id alias
 activitySchema.set("id", false);
 exports.ActivityModel = mongoose_1.default.model("Activity", activitySchema);

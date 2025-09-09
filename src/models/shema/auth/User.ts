@@ -9,7 +9,8 @@ import mongoose from "mongoose";
     phonenumber: { type: String},
     BaseImage64: { type: String},
     isVerified: { type: Boolean, default: false },
-    googleId: { type: String, unique: true, sparse: true },   
+    googleId: { type: String, unique: true, sparse: true }, 
+    planId: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan',default:null},  
 
   },
   { timestamps: true, }

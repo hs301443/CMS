@@ -13,5 +13,6 @@ const SubscriptionSchema = new mongoose_1.default.Schema({
     endDate: { type: Date, required: true },
     websites_created_count: { type: Number, default: 0 },
     websites_remaining_count: { type: Number, default: 0 },
+    status: { type: String, enum: ["active", "expired"], default: "active" }
 }, { timestamps: true });
 exports.SubscriptionModel = mongoose_1.default.model('Subscription', SubscriptionSchema);

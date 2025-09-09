@@ -18,7 +18,6 @@ export const getAllWebsites = async (req: Request, res: Response) => {
 };
 
 
-// ✅ 2- Get website by ID
 export const getWebsiteById = async (req: Request, res: Response) => {
   if (!req.user || req.user.role !== "admin")
     throw new UnauthorizedError("Access denied");
@@ -37,7 +36,6 @@ export const getWebsiteById = async (req: Request, res: Response) => {
 };
 
 
-// ✅ 3- Approve/Reject website
 export const updateWebsiteStatus = async (req: Request, res: Response) => {
   if (!req.user || req.user.role !== "admin")
     throw new UnauthorizedError("Access denied");

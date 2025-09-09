@@ -14,5 +14,6 @@ const UserSchema = new mongoose_1.Schema({
     BaseImage64: { type: String },
     isVerified: { type: Boolean, default: false },
     googleId: { type: String, unique: true, sparse: true },
+    planId: { type: mongoose_2.default.Schema.Types.ObjectId, ref: 'Plan', default: null },
 }, { timestamps: true, });
 exports.UserModel = mongoose_2.default.model('User', UserSchema);

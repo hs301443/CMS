@@ -16,7 +16,6 @@ const getAllWebsites = async (req, res) => {
     (0, response_1.SuccessResponse)(res, { message: "All websites fetched successfully", websites });
 };
 exports.getAllWebsites = getAllWebsites;
-// ✅ 2- Get website by ID
 const getWebsiteById = async (req, res) => {
     if (!req.user || req.user.role !== "admin")
         throw new index_1.UnauthorizedError("Access denied");
@@ -32,7 +31,6 @@ const getWebsiteById = async (req, res) => {
     (0, response_1.SuccessResponse)(res, { message: "Website fetched successfully", website });
 };
 exports.getWebsiteById = getWebsiteById;
-// ✅ 3- Approve/Reject website
 const updateWebsiteStatus = async (req, res) => {
     if (!req.user || req.user.role !== "admin")
         throw new index_1.UnauthorizedError("Access denied");

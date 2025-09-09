@@ -15,20 +15,17 @@ const createPayment = async (req, res) => {
     if (!amount || !paymentmethod_id || !plan_id) {
         throw new BadRequest_1.BadRequest("Please provide all the required fields");
     }
-    // ✅ تحقق من أن الـ plan موجود
     const plan = await plans_1.PlanModel.findById(plan_id);
     if (!plan)
         throw new NotFound_1.NotFound("Plan not found");
-    // ✅ تحقق من المبلغ مقابل الأسعار في الـ plan
     const validAmounts = [
         plan.price_quarterly,
         plan.price_semi_annually,
         plan.price_annually,
-    ].filter((price) => price !== undefined && price !== null); // نشيل undefined/null
+    ].filter((price) => price !== undefined && price !== null);
     if (!validAmounts.includes(amount)) {
         throw new BadRequest_1.BadRequest("Invalid payment amount for this plan");
     }
-    // ✅ إنشاء الـ payment
     const payment = await payments_1.PaymentModel.create({
         amount,
         paymentmethod_id,

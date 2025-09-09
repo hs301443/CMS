@@ -9,14 +9,12 @@ const activitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 🔗 Virtual populate
 activitySchema.virtual("templates", {
   ref: "Template",
   localField: "_id",
   foreignField: "activityId",
 });
 
-// ✅ إعدادات الإخراج
 activitySchema.set("toJSON", {
   virtuals: true,
   versionKey: false,
@@ -27,7 +25,6 @@ activitySchema.set("toObject", {
   versionKey: false,
 });
 
-// ✅ إلغاء توليد id alias
 activitySchema.set("id", false);
 
 export const ActivityModel = mongoose.model("Activity", activitySchema);
