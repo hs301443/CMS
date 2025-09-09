@@ -6,28 +6,38 @@ import { UnauthorizedError } from '../../Errors/unauthorizedError';
 import { SuccessResponse } from '../../utils/response';
 
 export const createTemplate = async (req: Request, res: Response) => {
-  if (!req.user || req.user.role !== "admin")
+  if (!req.user || req.user.role !== "admin") {
     throw new UnauthorizedError("Access denied");
+  }
 
-  const { name ,activityId} = req.body;
-
+  const { name, activityId } = req.body;
   if (!name) throw new BadRequest("name is required");
-  const file = req.file;
-  if (!file) throw new BadRequest("file is required");
+  if (!activityId) throw new BadRequest("activityId is required");
+
+  // ✅ Multer بيرجعهم كـ object of arrays
+  const files = req.files as {
+    [fieldname: string]: Express.Multer.File[];
+  };
+
+  if (!files || !files["template_file_path"] || !files["photo"]) {
+    throw new BadRequest("Both template file and photo are required");
+  }
+
+  const templateFile = files["template_file_path"][0];
+  const photoFile = files["photo"][0];
 
   const newTemplate = await TemplateModel.create({
     name,
-    template_file_path: file.path, 
-    activityId
-    });
+    activityId,
+    template_file_path: templateFile.path,
+    photo: photoFile.path,
+  });
 
   SuccessResponse(res, {
-    message: "template created successfully",
+    message: "Template created successfully",
     newTemplate,
   });
 };
-
-
 
 export const getAllTemplates =async (req: Request, res: Response) => {
      if (!req.user || req.user.role !== 'admin')  throw new UnauthorizedError("Access denied");
@@ -44,27 +54,40 @@ export const updateTemplate = async (req: Request, res: Response) => {
   }
 
   const { id } = req.params;
-  const { name,activityId } = req.body;
-  const file = req.file; // لو عايز تعدل الملف
+  const { name, activityId } = req.body;
 
   if (!id) throw new BadRequest("Template ID is required");
 
-  // بناء update object
+  // 📌 بناء update object
   const updateData: any = {};
   if (name) updateData.name = name;
-  if (file) updateData.template_file_path = file.path;
   if (activityId) updateData.activityId = activityId;
+
+  // ✅ Multer بيرجع الملفات في req.files
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+  if (files?.template_file_path && files.template_file_path[0]) {
+    updateData.template_file_path = files.template_file_path[0].path;
+  }
+
+  if (files?.photo && files.photo[0]) {
+    updateData.photo = files.photo[0].path;
+  }
 
   const template = await TemplateModel.findByIdAndUpdate(
     id,
     { $set: updateData },
-    { new: true } // يرجع التيمبلت بعد التحديث
+    { new: true }
   );
 
   if (!template) throw new NotFound("Template not found");
 
-  SuccessResponse(res, { message: "Template updated successfully", template });
+  SuccessResponse(res, {
+    message: "Template updated successfully",
+    template,
+  });
 };
+
 
 export const getTemplateById = async (req: Request, res: Response) => {
   if (!req.user || req.user.role !== "admin") throw new UnauthorizedError("Access denied");

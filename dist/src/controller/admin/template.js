@@ -7,21 +7,29 @@ const NotFound_1 = require("../../Errors/NotFound");
 const unauthorizedError_1 = require("../../Errors/unauthorizedError");
 const response_1 = require("../../utils/response");
 const createTemplate = async (req, res) => {
-    if (!req.user || req.user.role !== "admin")
+    if (!req.user || req.user.role !== "admin") {
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
+    }
     const { name, activityId } = req.body;
     if (!name)
         throw new BadRequest_1.BadRequest("name is required");
-    const file = req.file;
-    if (!file)
-        throw new BadRequest_1.BadRequest("file is required");
+    if (!activityId)
+        throw new BadRequest_1.BadRequest("activityId is required");
+    // ✅ Multer بيرجعهم كـ object of arrays
+    const files = req.files;
+    if (!files || !files["template_file_path"] || !files["photo"]) {
+        throw new BadRequest_1.BadRequest("Both template file and photo are required");
+    }
+    const templateFile = files["template_file_path"][0];
+    const photoFile = files["photo"][0];
     const newTemplate = await templates_1.TemplateModel.create({
         name,
-        template_file_path: file.path,
-        activityId
+        activityId,
+        template_file_path: templateFile.path,
+        photo: photoFile.path,
     });
     (0, response_1.SuccessResponse)(res, {
-        message: "template created successfully",
+        message: "Template created successfully",
         newTemplate,
     });
 };
@@ -41,22 +49,29 @@ const updateTemplate = async (req, res) => {
     }
     const { id } = req.params;
     const { name, activityId } = req.body;
-    const file = req.file; // لو عايز تعدل الملف
     if (!id)
         throw new BadRequest_1.BadRequest("Template ID is required");
-    // بناء update object
+    // 📌 بناء update object
     const updateData = {};
     if (name)
         updateData.name = name;
-    if (file)
-        updateData.template_file_path = file.path;
     if (activityId)
         updateData.activityId = activityId;
-    const template = await templates_1.TemplateModel.findByIdAndUpdate(id, { $set: updateData }, { new: true } // يرجع التيمبلت بعد التحديث
-    );
+    // ✅ Multer بيرجع الملفات في req.files
+    const files = req.files;
+    if (files?.template_file_path && files.template_file_path[0]) {
+        updateData.template_file_path = files.template_file_path[0].path;
+    }
+    if (files?.photo && files.photo[0]) {
+        updateData.photo = files.photo[0].path;
+    }
+    const template = await templates_1.TemplateModel.findByIdAndUpdate(id, { $set: updateData }, { new: true });
     if (!template)
         throw new NotFound_1.NotFound("Template not found");
-    (0, response_1.SuccessResponse)(res, { message: "Template updated successfully", template });
+    (0, response_1.SuccessResponse)(res, {
+        message: "Template updated successfully",
+        template,
+    });
 };
 exports.updateTemplate = updateTemplate;
 const getTemplateById = async (req, res) => {
