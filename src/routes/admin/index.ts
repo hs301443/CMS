@@ -9,6 +9,8 @@ import  ActivitiesRouter  from "./activities";
 import TemplateRouter from './template'
 import PaymentRouter from "./payments";
 import websiteRouter from "./Websites";
+import promocodeRouter from "./promo_code";
+import promocodePlansRouter from "./promocode_plans";
 export const route = Router();
 
 route.use("/auth", authRouter);
@@ -20,4 +22,6 @@ route.use("/activities", ActivitiesRouter);
 route.use("/templates",TemplateRouter)
 route.use("/payments", PaymentRouter);
 route.use("/websites",websiteRouter)
+route.use("/promocode",promocodeRouter)
+route.use("/promocode-plans",promocodePlansRouter)
 export default route;
