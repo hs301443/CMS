@@ -6,13 +6,32 @@ import { UnauthorizedError } from '../../Errors/unauthorizedError';
 import { SuccessResponse } from '../../utils/response';
 
 export const createPaymentMethod = async (req: Request, res: Response) => {
-      if (!req.user || req.user.role !== 'admin')  throw new UnauthorizedError("Access denied");
+  if (!req.user || req.user.role !== "admin") 
+    throw new UnauthorizedError("Access denied");
 
-    const data= req.body;
-    if (!data) throw new BadRequest('Please provide all the required fields');
-    const paymentMethod = await PaymentMethodModel.create({ ...data });
-    SuccessResponse(res, { message: 'Payment method created successfully', paymentMethod });
-}
+  const { name, discription } = req.body;
+  if (!name || !discription) 
+    throw new BadRequest("Please provide all the required fields");
+
+  // التأكد من رفع اللوجو
+  if (!req.file) 
+    throw new BadRequest("Logo file is required");
+
+  const logo_Url = `/uploads/payment_logos/${req.file.filename}`; // أو المسار الكامل حسب إعدادات السيرفر
+
+  const paymentMethod = await PaymentMethodModel.create({
+    name,
+    discription,
+    logo_Url,
+    isActive: true,
+  });
+
+  SuccessResponse(res, { 
+    message: "Payment method created successfully", 
+    paymentMethod 
+  });
+};
+
 
 export const getAllPaymentMethods = async (req: Request, res: Response) => {
       if (!req.user || req.user.role !== 'admin')  throw new UnauthorizedError("Access denied");
@@ -33,16 +52,30 @@ export const getPaymentMethodById = async (req: Request, res: Response) => {
 }
 
 export const updatePaymentMethod = async (req: Request, res: Response) => {
-         if (!req.user || req.user.role !== 'admin')  throw new UnauthorizedError("Access denied");
+  if (!req.user || req.user.role !== "admin") 
+    throw new UnauthorizedError("Access denied");
 
+  const { id } = req.params;
+  if (!id) throw new BadRequest("Please provide payment method id");
 
-    const { id } = req.params;
-    if (!id) throw new BadRequest('Please provide payment method id');
-    const data= req.body;
-    const paymentMethod = await PaymentMethodModel.findByIdAndUpdate(id, { ...data }, { new: true });
-    if (!paymentMethod) throw new NotFound('Payment method not found');
-    SuccessResponse(res, { message: 'Payment method updated successfully', paymentMethod });
-}
+  const paymentMethod = await PaymentMethodModel.findById(id);
+  if (!paymentMethod) throw new NotFound("Payment method not found");
+
+  // تحديث الحقول من الـ body
+  Object.assign(paymentMethod, req.body);
+
+  // تحديث اللوجو لو تم رفعه
+  if (req.file) {
+    paymentMethod.logo_Url = `/uploads/payment_logos/${req.file.filename}`;
+  }
+
+  await paymentMethod.save(); // حفظ التغييرات
+
+  SuccessResponse(res, { 
+    message: "Payment method updated successfully", 
+    paymentMethod 
+  });
+};
 
 export const deletePaymentMethod = async (req: Request, res: Response) => {
       if (!req.user || req.user.role !== 'admin')  throw new UnauthorizedError("Access denied");

@@ -36,3 +36,21 @@ const websiteStorage = multer.diskStorage({
 });
 
 export const uploadWebsite = multer({ storage: websiteStorage });
+
+// 📌 تخزين ملفات لوجو Payment Methods
+const logoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, "../uploads/payment_logos");
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    // نخلي الاسم unique وفيه اسم الـ field
+    const uniqueName = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
+
+export const uploadLogo = multer({ storage: logoStorage });
