@@ -8,6 +8,8 @@ const response_1 = require("../../utils/response");
 const subscriptions_1 = require("../../models/shema/subscriptions");
 const payments_1 = require("../../models/shema/payments");
 const User_1 = require("../../models/shema/auth/User");
+const promo_code_1 = require("../../models/shema/promo_code");
+const promocode_users_1 = require("../../models/shema/promocode_users");
 const getAllPaymentsAdmin = async (req, res) => {
     if (!req.user || req.user.role !== "admin")
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
@@ -26,7 +28,6 @@ const getAllPaymentsAdmin = async (req, res) => {
     });
 };
 exports.getAllPaymentsAdmin = getAllPaymentsAdmin;
-// ✅ Admin: Get payment by id
 const getPaymentByIdAdmin = async (req, res) => {
     if (!req.user || req.user.role !== "admin")
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
@@ -42,7 +43,6 @@ const getPaymentByIdAdmin = async (req, res) => {
     (0, response_1.SuccessResponse)(res, { message: "Payment fetched successfully (admin)", payment });
 };
 exports.getPaymentByIdAdmin = getPaymentByIdAdmin;
-// ✅ Admin: Update payment status
 const updatePayment = async (req, res) => {
     if (!req.user || req.user.role !== "admin")
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
@@ -54,81 +54,104 @@ const updatePayment = async (req, res) => {
     const payment = await payments_1.PaymentModel.findById(id).populate("plan_id");
     if (!payment)
         throw new NotFound_1.NotFound("Payment not found");
-    // ✅ Update payment
+    // تحديث حالة الدفع
     payment.status = status;
     if (status === "rejected") {
         payment.rejected_reason = rejected_reason || "No reason provided";
+        await payment.save();
+        return (0, response_1.SuccessResponse)(res, { message: "Payment rejected", payment });
+    }
+    // لو approved
+    const plan = payment.plan_id;
+    const user = await User_1.UserModel.findById(payment.userId);
+    if (!user)
+        throw new NotFound_1.NotFound("User not found");
+    // ✅ التحقق من Promo Code
+    if (payment.code) {
+        const promo = await promo_code_1.PromoCodeModel.findOne({
+            code: payment.code,
+            isActive: true,
+            start_date: { $lte: new Date() },
+            end_date: { $gte: new Date() }
+        });
+        if (promo) {
+            promo.available_users += 1;
+            await promo.save();
+            const alreadyUsed = await promocode_users_1.PromoCodeUserModel.findOne({
+                userId: user._id,
+                codeId: promo._id
+            });
+            if (!alreadyUsed) {
+                await promocode_users_1.PromoCodeUserModel.create({
+                    userId: user._id,
+                    codeId: promo._id
+                });
+            }
+        }
+    }
+    // تحديد عدد الأشهر للإشتراك بناءً على subscriptionType
+    let monthsToAdd = 0;
+    const subscriptionType = payment.subscriptionType || "quarterly"; // افتراضي quarterly إذا مش محدد
+    switch (subscriptionType) {
+        case "quarterly":
+            monthsToAdd = 3;
+            break;
+        case "semi_annually":
+            monthsToAdd = 6;
+            break;
+        case "annually":
+            monthsToAdd = 12;
+            break;
+        default: throw new BadRequest_1.BadRequest("Invalid subscription type");
+    }
+    // التعامل مع الاشتراك
+    if (!user.planId) {
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setMonth(startDate.getMonth() + monthsToAdd);
+        await subscriptions_1.SubscriptionModel.create({
+            userId: user._id,
+            planId: plan._id,
+            PaymentId: payment._id,
+            startDate,
+            endDate,
+            status: "active",
+            websites_created_count: 0,
+            websites_remaining_count: plan.website_limit || 0,
+        });
+        user.planId = plan._id;
+        await user.save();
+    }
+    else if (user.planId.toString() === plan._id.toString()) {
+        const subscription = await subscriptions_1.SubscriptionModel.findOne({
+            userId: user._id,
+            planId: plan._id,
+            status: "active",
+        }).sort({ createdAt: -1 });
+        if (!subscription)
+            throw new NotFound_1.NotFound("Active subscription not found");
+        subscription.endDate.setMonth(subscription.endDate.getMonth() + monthsToAdd);
+        await subscription.save();
+    }
+    else {
+        await subscriptions_1.SubscriptionModel.updateMany({ userId: user._id, status: "active" }, { $set: { status: "expired" } });
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setMonth(startDate.getMonth() + monthsToAdd);
+        await subscriptions_1.SubscriptionModel.create({
+            userId: user._id,
+            planId: plan._id,
+            PaymentId: payment._id,
+            startDate,
+            endDate,
+            status: "active",
+            websites_created_count: 0,
+            websites_remaining_count: plan.website_limit || 0,
+        });
+        user.planId = plan._id;
+        await user.save();
     }
     await payment.save();
-    if (status === "approved") {
-        const plan = payment.plan_id;
-        const user = await User_1.UserModel.findById(payment.userId);
-        if (!user)
-            throw new NotFound_1.NotFound("User not found");
-        // نحدد المدة حسب الـ amount اللي دفعه
-        let monthsToAdd = 0;
-        if (payment.amount === plan.price_quarterly) {
-            monthsToAdd = 3;
-        }
-        else if (payment.amount === plan.price_semi_annually) {
-            monthsToAdd = 6;
-        }
-        else if (payment.amount === plan.price_annually) {
-            monthsToAdd = 12;
-        }
-        else {
-            throw new BadRequest_1.BadRequest("Invalid payment amount for this plan");
-        }
-        // 1- لو user.planId = null → أول اشتراك
-        if (!user.planId) {
-            const startDate = new Date();
-            const endDate = new Date();
-            endDate.setMonth(startDate.getMonth() + monthsToAdd);
-            await subscriptions_1.SubscriptionModel.create({
-                userId: user._id,
-                planId: plan._id,
-                PaymentId: payment._id,
-                startDate,
-                endDate,
-                status: "active",
-                websites_created_count: 0,
-                websites_remaining_count: plan.website_limit || 0,
-            });
-            user.planId = plan._id;
-            await user.save();
-        }
-        // 2- نفس الخطة → نمد الاشتراك الحالي
-        else if (user.planId.toString() === plan._id.toString()) {
-            const subscription = await subscriptions_1.SubscriptionModel.findOne({
-                userId: user._id,
-                planId: plan._id,
-                status: "active",
-            }).sort({ createdAt: -1 });
-            if (!subscription)
-                throw new NotFound_1.NotFound("Active subscription not found");
-            subscription.endDate.setMonth(subscription.endDate.getMonth() + monthsToAdd);
-            await subscription.save();
-        }
-        // 3- خطة مختلفة → نخلي القديم expired وننشئ جديد
-        else {
-            await subscriptions_1.SubscriptionModel.updateMany({ userId: user._id, status: "active" }, { $set: { status: "expired" } });
-            const startDate = new Date();
-            const endDate = new Date();
-            endDate.setMonth(startDate.getMonth() + monthsToAdd);
-            await subscriptions_1.SubscriptionModel.create({
-                userId: user._id,
-                planId: plan._id,
-                PaymentId: payment._id,
-                startDate,
-                endDate,
-                status: "active",
-                websites_created_count: 0,
-                websites_remaining_count: plan.website_limit || 0,
-            });
-            user.planId = plan._id;
-            await user.save();
-        }
-    }
-    (0, response_1.SuccessResponse)(res, { message: "Payment status updated successfully", payment });
+    (0, response_1.SuccessResponse)(res, { message: "Payment approved successfully", payment });
 };
 exports.updatePayment = updatePayment;
