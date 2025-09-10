@@ -4,46 +4,78 @@ import { SuccessResponse } from '../../utils/response';
 import { BadRequest } from '../../Errors/BadRequest';
 import { NotFound } from '../../Errors/NotFound';
 import { UnauthorizedError } from '../../Errors/unauthorizedError';
+import { PromoCodePlanModel } from '../../models/shema/promocode_plans';
 
-export const createpromoCode=async(req: Request, res: Response) => {
-    if (!req.user|| req.user.role !== 'admin') throw new UnauthorizedError('access denied');
-    const data = req.body;
-    if (!data) throw new BadRequest('Please provide all the required fields');
-    const promocode = await PromoCodeModel.create(data);
-    SuccessResponse(res, { message: 'Promo Code created successfully', promocode });
-}
+export const createPromoCodeWithPlans = async (req: Request, res: Response) => {
+  const { promoCodeData, planLinks } = req.body;
+  
+  if (!promoCodeData || !planLinks) throw new BadRequest("Missing promo code data or plan links");
 
-export const getAllPromoCode=async(req: Request, res: Response) => {
-    if (!req.user|| req.user.role !== 'admin') throw new UnauthorizedError('access denied');
-    const data = await PromoCodeModel.find();
-    if (!data) throw new NotFound('No Promo Code found');
-    SuccessResponse(res, { message: 'All Promo Code fetched successfully', data });
-}
+  const promoCode = await PromoCodeModel.create({
+    ...promoCodeData,
+    available_users: promoCodeData.maxusers
+  });
 
-export const getPromoCodeById=async(req: Request, res: Response) => {
-    if (!req.user|| req.user.role !== 'admin') throw new UnauthorizedError('access denied');
-    const { id } = req.params;
-    if (!id) throw new BadRequest('Please provide Promo Code id');
-    const data = await PromoCodeModel.findById(id);
-    if (!data) throw new NotFound('Promo Code not found');
-    SuccessResponse(res, { message: 'Promo Code fetched successfully', data });
-}
+  const plans = planLinks.map((link: any) => ({
+    ...link,
+    codeId: promoCode._id
+  }));
 
-export const updatePromoCode=async(req: Request, res: Response) => {
-    if (!req.user|| req.user.role !== 'admin') throw new UnauthorizedError('access denied');
-    const { id } = req.params;
-    if (!id) throw new BadRequest('Please provide Promo Code id');
-    const data = req.body;
-    const promocode = await PromoCodeModel.findByIdAndUpdate(id, { ...data }, { new: true });
-    if (!promocode) throw new NotFound('Promo Code not found');
-    SuccessResponse(res, { message: 'Promo Code updated successfully', promocode });
-}
+  await PromoCodePlanModel.insertMany(plans);
 
-export const deletePromoCode=async(req: Request, res: Response) => {
-    if (!req.user|| req.user.role !== 'admin') throw new UnauthorizedError('access denied');
-    const { id } = req.params;
-    if (!id) throw new BadRequest('Please provide Promo Code id');
-    const promocode = await PromoCodeModel.findByIdAndDelete(id);
-    if (!promocode) throw new NotFound('Promo Code not found');
-    SuccessResponse(res, { message: 'Promo Code deleted successfully' });
-}
+  SuccessResponse(res, {
+    message: "Promo code created with linked plans",
+    promoCode
+  });
+};
+
+export const getAllPromoCodesWithPlans = async (req: Request, res: Response) => {
+  const promos = await PromoCodeModel.find()
+    .lean()
+    .exec();
+
+  const promosWithPlans = await Promise.all(promos.map(async (promo) => {
+    const plans = await PromoCodePlanModel.find({ codeId: promo._id }).lean();
+    return { ...promo, plans };
+  }));
+
+  SuccessResponse(res, { promos: promosWithPlans });
+};
+
+export const getPromoCodeWithPlansById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const promo = await PromoCodeModel.findById(id);
+  if (!promo) throw new NotFound("Promo code not found");
+
+  const plans = await PromoCodePlanModel.find({ codeId: id });
+  SuccessResponse(res, { promo, plans });
+};
+
+// ✏️ تعديل كود + الخطط
+export const updatePromoCodeWithPlans = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { promoCodeData, planLinks } = req.body;
+
+  const promo = await PromoCodeModel.findByIdAndUpdate(id, promoCodeData, { new: true });
+  if (!promo) throw new NotFound("Promo code not found");
+
+  // حذف الخطط القديمة المرتبطة
+  await PromoCodePlanModel.deleteMany({ codeId: id });
+
+  // إضافة الخطط الجديدة
+  const plans = planLinks.map((link: any) => ({ ...link, codeId: promo._id }));
+  await PromoCodePlanModel.insertMany(plans);
+
+  SuccessResponse(res, { message: "Promo code and plans updated", promo });
+};
+
+// ❌ حذف كود + الخطط المرتبطة
+export const deletePromoCodeWithPlans = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const promo = await PromoCodeModel.findByIdAndDelete(id);
+  if (!promo) throw new NotFound("Promo code not found");
+
+  await PromoCodePlanModel.deleteMany({ codeId: id });
+
+  SuccessResponse(res, { message: "Promo code and linked plans deleted" });
+};

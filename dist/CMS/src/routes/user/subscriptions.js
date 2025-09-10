@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const subscriptions_1 = require("../../controller/users/subscriptions");
+const catchAsync_1 = require("../../utils/catchAsync");
+//import { CreateSubscriptionSchema, UpdateSubscriptionSchema } from '../../validation/user/subscriptions';
+const authenticated_1 = require("../../middlewares/authenticated");
+const router = (0, express_1.Router)();
+//router.post('/', authenticated, validate(CreateSubscriptionSchema), catchAsync(createSubscription));
+router.get('/', authenticated_1.authenticated, (0, catchAsync_1.catchAsync)(subscriptions_1.getAllSubscriptions));
+router.get('/:id', authenticated_1.authenticated, (0, catchAsync_1.catchAsync)(subscriptions_1.getSubscriptionById));
+// router.put('/:id', authenticated, validate(UpdateSubscriptionSchema), catchAsync(updateSubscription));
+// router.delete('/:id', authenticated, catchAsync(deleteSubscription));
+exports.default = router;

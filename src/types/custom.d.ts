@@ -4,11 +4,12 @@ export interface AppUser {
   id: string;
   name: string;
   role: string;
+    planId?: string;
+
 }
 
-// Extend Express Request with your custom user type
 export interface AuthenticatedRequest extends Request {
-  user?: AppUser; // Make user required
+  user?: AppUser; 
 }
 
 declare global {

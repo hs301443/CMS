@@ -7,7 +7,6 @@ import  ActivitiesRouter  from "./activities";
 import TemplatesRouter from './template'
 import PaymentsRouter from "./payments";
 import websitesRouter from './Websites';
-import promocodePlansRouter from "./promocode_plans";
 const route = Router();
 route.use("/auth", AuthRoute);
 route.use("/plans", PlaneRouter);
@@ -17,7 +16,6 @@ route.use("/activities", ActivitiesRouter);
 route.use("/templates",TemplatesRouter)
 route.use("/payments", PaymentsRouter);
 route.use("/websites",websitesRouter)
-route.use("/promocode-plans",promocodePlansRouter)
 
 export default route;
 
