@@ -72,10 +72,11 @@ const updatePayment = async (req, res) => {
             code: payment.code,
             isActive: true,
             start_date: { $lte: new Date() },
-            end_date: { $gte: new Date() }
+            end_date: { $gte: new Date() },
+            available_users: { $gt: 0 }
         });
         if (promo) {
-            promo.available_users += 1;
+            promo.available_users -= 1;
             await promo.save();
             const alreadyUsed = await promocode_users_1.PromoCodeUserModel.findOne({
                 userId: user._id,

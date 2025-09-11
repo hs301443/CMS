@@ -80,11 +80,12 @@ export const updatePayment = async (req: Request, res: Response) => {
       code: payment.code, 
       isActive: true,
       start_date: { $lte: new Date() },
-      end_date: { $gte: new Date() }
+      end_date: { $gte: new Date() },
+      available_users:{ $gt: 0 }
     });
 
     if (promo) {
-      promo.available_users += 1;
+      promo.available_users -= 1;
       await promo.save();
 
       const alreadyUsed = await PromoCodeUserModel.findOne({
