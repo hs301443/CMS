@@ -15,8 +15,7 @@ import {
 import { generateToken } from "../../utils/auth";
 import { sendEmail } from "../../utils/sendEmails";
 import { BadRequest } from "../../Errors/BadRequest";
-import { Types } from "mongoose";
-import { AuthenticatedRequest } from "../../types/custom";
+
 
 export const signup = async (req: Request, res: Response) => {
   const data = req.body;
@@ -123,11 +122,10 @@ export const verifyEmail = async (req: Request, res: Response) => {
     return res.status(400).json({ success: false, error: { code: 400, message: "Verification code expired" } });
   }
 
-  // تحديث المستخدم مباشرة بدون save()
   const user = await UserModel.findByIdAndUpdate(
     userId,
     { isVerified: true },
-    { new: true } // يرجع النسخة المحدثة
+    { new: true } 
   );
 
   // حذف سجل التحقق
