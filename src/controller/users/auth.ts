@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { saveBase64Image } from "../../utils/handleImages";
 import { EmailVerificationModel} from "../../models/shema/auth/emailVerifications";
 import { UserModel } from "../../models/shema/auth/User";
 import bcrypt from "bcrypt";
@@ -10,7 +9,6 @@ import {
   ForbiddenError,
   NotFound,
   UnauthorizedError,
-  UniqueConstrainError,
 } from "../../Errors";
 import { generateToken } from "../../utils/auth";
 import { sendEmail } from "../../utils/sendEmails";
