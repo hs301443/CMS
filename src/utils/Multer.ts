@@ -2,55 +2,24 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 
-// 📌 تخزين ملفات الـ Templates (zip + photo)
-const templateStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, "../uploads/templates");
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    // نخلي الاسم unique وفيه اسم الـ field
-    const uniqueName = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  },
-});
+// 📌 دالة عامة لإنشاء storage لفولدر معين
+const makeStorage = (folderName: string) =>
+  multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = path.join(__dirname, `../uploads/${folderName}`);
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      // نخلي الاسم unique + fieldname + extension
+      const uniqueName = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
+      cb(null, uniqueName);
+    },
+  });
 
-export const uploadTemplate = multer({ storage: templateStorage });
-
-// 📌 تخزين ملفات الـ Websites
-const websiteStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, "../uploads/websites");
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  },
-});
-
-export const uploadWebsite = multer({ storage: websiteStorage });
-
-// 📌 تخزين ملفات لوجو Payment Methods
-const logoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, "../uploads/payment_logos");
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    // نخلي الاسم unique وفيه اسم الـ field
-    const uniqueName = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  },
-});
-
-export const uploadLogo = multer({ storage: logoStorage });
+// 📌 استخدام الدالة للأنواع المختلفة
+export const uploadTemplate = multer({ storage: makeStorage("templates") });
+export const uploadWebsite  = multer({ storage: makeStorage("websites") });
+export const uploadLogo     = multer({ storage: makeStorage("payment_logos") });
