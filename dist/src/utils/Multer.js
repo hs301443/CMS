@@ -7,7 +7,6 @@ exports.uploadLogo = exports.uploadWebsite = exports.uploadTemplate = void 0;
 const fs_1 = __importDefault(require("fs"));
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
-// 📌 دالة عامة لإنشاء storage لفولدر معين
 const makeStorage = (folderName) => multer_1.default.diskStorage({
     destination: (req, file, cb) => {
         const uploadPath = path_1.default.join(__dirname, `../uploads/${folderName}`);
@@ -22,7 +21,6 @@ const makeStorage = (folderName) => multer_1.default.diskStorage({
         cb(null, uniqueName);
     },
 });
-// 📌 استخدام الدالة للأنواع المختلفة
 exports.uploadTemplate = (0, multer_1.default)({ storage: makeStorage("templates") });
 exports.uploadWebsite = (0, multer_1.default)({ storage: makeStorage("websites") });
 exports.uploadLogo = (0, multer_1.default)({ storage: makeStorage("payment_logos") });

@@ -2,7 +2,6 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 
-// 📌 دالة عامة لإنشاء storage لفولدر معين
 const makeStorage = (folderName: string) =>
   multer.diskStorage({
     destination: (req, file, cb) => {
@@ -19,7 +18,6 @@ const makeStorage = (folderName: string) =>
     },
   });
 
-// 📌 استخدام الدالة للأنواع المختلفة
 export const uploadTemplate = multer({ storage: makeStorage("templates") });
-export const uploadWebsite  = multer({ storage: makeStorage("websites") });
-export const uploadLogo     = multer({ storage: makeStorage("payment_logos") });
+export const uploadWebsite= multer({ storage: makeStorage("websites") });
+export const uploadLogo= multer({ storage: makeStorage("payment_logos") });
