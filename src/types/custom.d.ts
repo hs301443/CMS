@@ -1,21 +1,17 @@
-import { Request } from "express";
-
 export interface AppUser {
   id: string;
   name: string;
   role: string;
-    planId?: string;
-
-}
-
-export interface AuthenticatedRequest extends Request {
-  user?: AppUser; 
+  planId?: string;
 }
 
 declare global {
   namespace Express {
+    // نغيّر تعريف User بالكامل
+    interface User extends AppUser {}
+
     interface Request {
-      user?: AppUser;
-    } // extend default `User`
+      user?: User;
+    }
   }
 }

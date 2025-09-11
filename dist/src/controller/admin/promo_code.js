@@ -5,8 +5,11 @@ const promo_code_1 = require("../../models/shema/promo_code");
 const response_1 = require("../../utils/response");
 const BadRequest_1 = require("../../Errors/BadRequest");
 const NotFound_1 = require("../../Errors/NotFound");
+const unauthorizedError_1 = require("../../Errors/unauthorizedError");
 const promocode_plans_1 = require("../../models/shema/promocode_plans");
 const createPromoCodeWithPlans = async (req, res) => {
+    if (!req.user || req.user.role !== 'admin')
+        throw new unauthorizedError_1.UnauthorizedError('access denied');
     const { promoCodeData, planLinks } = req.body;
     if (!promoCodeData || !planLinks)
         throw new BadRequest_1.BadRequest("Missing promo code data or plan links");
@@ -26,6 +29,8 @@ const createPromoCodeWithPlans = async (req, res) => {
 };
 exports.createPromoCodeWithPlans = createPromoCodeWithPlans;
 const getAllPromoCodesWithPlans = async (req, res) => {
+    if (!req.user || req.user.role !== 'admin')
+        throw new unauthorizedError_1.UnauthorizedError('access denied');
     const promos = await promo_code_1.PromoCodeModel.find()
         .lean()
         .exec();
@@ -37,6 +42,8 @@ const getAllPromoCodesWithPlans = async (req, res) => {
 };
 exports.getAllPromoCodesWithPlans = getAllPromoCodesWithPlans;
 const getPromoCodeWithPlansById = async (req, res) => {
+    if (!req.user || req.user.role !== 'admin')
+        throw new unauthorizedError_1.UnauthorizedError('access denied');
     const { id } = req.params;
     const promo = await promo_code_1.PromoCodeModel.findById(id);
     if (!promo)
@@ -46,6 +53,8 @@ const getPromoCodeWithPlansById = async (req, res) => {
 };
 exports.getPromoCodeWithPlansById = getPromoCodeWithPlansById;
 const updatePromoCodeWithPlans = async (req, res) => {
+    if (!req.user || req.user.role !== 'admin')
+        throw new unauthorizedError_1.UnauthorizedError('access denied');
     const { id } = req.params;
     const { promoCodeData, planLinks } = req.body;
     const promo = await promo_code_1.PromoCodeModel.findByIdAndUpdate(id, promoCodeData, { new: true });
@@ -60,6 +69,8 @@ const updatePromoCodeWithPlans = async (req, res) => {
 };
 exports.updatePromoCodeWithPlans = updatePromoCodeWithPlans;
 const deletePromoCodeWithPlans = async (req, res) => {
+    if (!req.user || req.user.role !== 'admin')
+        throw new unauthorizedError_1.UnauthorizedError('access denied');
     const { id } = req.params;
     const promo = await promo_code_1.PromoCodeModel.findByIdAndDelete(id);
     if (!promo)

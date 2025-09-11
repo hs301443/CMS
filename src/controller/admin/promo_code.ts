@@ -7,6 +7,7 @@ import { UnauthorizedError } from '../../Errors/unauthorizedError';
 import { PromoCodePlanModel } from '../../models/shema/promocode_plans';
 
 export const createPromoCodeWithPlans = async (req: Request, res: Response) => {
+    if (!req.user|| req.user.role !== 'admin') throw new UnauthorizedError('access denied');
   const { promoCodeData, planLinks } = req.body;
   
   if (!promoCodeData || !planLinks) throw new BadRequest("Missing promo code data or plan links");
@@ -30,6 +31,8 @@ export const createPromoCodeWithPlans = async (req: Request, res: Response) => {
 };
 
 export const getAllPromoCodesWithPlans = async (req: Request, res: Response) => {
+      if (!req.user|| req.user.role !== 'admin') throw new UnauthorizedError('access denied');
+  
   const promos = await PromoCodeModel.find()
     .lean()
     .exec();
@@ -43,6 +46,8 @@ export const getAllPromoCodesWithPlans = async (req: Request, res: Response) => 
 };
 
 export const getPromoCodeWithPlansById = async (req: Request, res: Response) => {
+      if (!req.user|| req.user.role !== 'admin') throw new UnauthorizedError('access denied');
+  
   const { id } = req.params;
   const promo = await PromoCodeModel.findById(id);
   if (!promo) throw new NotFound("Promo code not found");
@@ -52,6 +57,8 @@ export const getPromoCodeWithPlansById = async (req: Request, res: Response) => 
 };
 
 export const updatePromoCodeWithPlans = async (req: Request, res: Response) => {
+      if (!req.user|| req.user.role !== 'admin') throw new UnauthorizedError('access denied');
+  
   const { id } = req.params;
   const { promoCodeData, planLinks } = req.body;
 
@@ -69,6 +76,8 @@ export const updatePromoCodeWithPlans = async (req: Request, res: Response) => {
 };
 
 export const deletePromoCodeWithPlans = async (req: Request, res: Response) => {
+      if (!req.user|| req.user.role !== 'admin') throw new UnauthorizedError('access denied');
+  
   const { id } = req.params;
   const promo = await PromoCodeModel.findByIdAndDelete(id);
   if (!promo) throw new NotFound("Promo code not found");
