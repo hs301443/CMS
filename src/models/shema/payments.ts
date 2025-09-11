@@ -10,7 +10,8 @@ const paymentSchema = new mongoose.Schema({
     rejected_reason: { type: String},
     code: { type: String},
     payment_date: { type: Date, required: true },
-    subscriptionType: { type: String, enum: ["monthly", "quarterly", "semi_annually", "annually"], default: "quarterly" } // ← هنا
+    subscriptionType: { type: String, enum: ["monthly", "quarterly", "semi_annually", "annually"], default: "quarterly" } , 
+    photo: { type: String, required: true }, 
 
     
 }, { timestamps: true });

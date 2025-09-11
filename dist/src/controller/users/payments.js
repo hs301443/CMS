@@ -31,13 +31,20 @@ const createPayment = async (req, res) => {
     const plan = await plans_1.PlanModel.findById(plan_id);
     if (!plan)
         throw new NotFound_1.NotFound("Plan not found");
+    // تحويل المبلغ إلى رقم
+    const parsedAmount = Number(amount);
+    // التحقق إن المبلغ رقم موجب وصالح
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        throw new BadRequest_1.BadRequest("Amount must be a positive number");
+    }
     // التحقق من صحة المبلغ الأصلي بالنسبة للخطة
     const validAmounts = [
+        plan.price_monthly,
         plan.price_quarterly,
         plan.price_semi_annually,
         plan.price_annually
     ].filter(price => price != null);
-    if (!validAmounts.includes(amount)) {
+    if (!validAmounts.includes(parsedAmount)) {
         throw new BadRequest_1.BadRequest("Invalid payment amount for this plan");
     }
     // حساب الخصم إذا كان هناك كود
@@ -88,6 +95,11 @@ const createPayment = async (req, res) => {
     if (finalAmount <= 0) {
         throw new BadRequest_1.BadRequest("Invalid payment amount after applying promo code");
     }
+    // حفظ الصورة لو مرفوعة
+    let photoUrl;
+    if (req.file) {
+        photoUrl = req.file.path; // Cloudinary بيرجع الـ URL في path
+    }
     // إنشاء الدفع
     const payment = await payments_1.PaymentModel.create({
         amount: finalAmount,
@@ -97,6 +109,7 @@ const createPayment = async (req, res) => {
         userId,
         status: "pending",
         code,
+        photo: photoUrl, // الحقل الجديد للصورة
     });
     (0, response_1.SuccessResponse)(res, {
         message: "Payment created successfully. Promo code applied (if valid).",
