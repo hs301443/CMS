@@ -11,7 +11,7 @@ router.post("/", Multer_1.uploadTemplate.fields([
 ]), (0, catchAsync_1.catchAsync)(template_1.createTemplate));
 router.get("/", (0, catchAsync_1.catchAsync)(template_1.getAllTemplates));
 router.get("/:id", (0, catchAsync_1.catchAsync)(template_1.getTemplateById));
-router.patch("/:id", Multer_1.uploadTemplate.fields([
+router.put("/:id", Multer_1.uploadTemplate.fields([
     { name: "template_file_path", maxCount: 1 },
     { name: "photo", maxCount: 1 },
 ]), (0, catchAsync_1.catchAsync)(template_1.updateTemplate));

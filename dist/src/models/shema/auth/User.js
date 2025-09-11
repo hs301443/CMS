@@ -11,9 +11,9 @@ const UserSchema = new mongoose_1.Schema({
     email: { type: String, unique: true },
     password: { type: String },
     phonenumber: { type: String },
-    BaseImage64: { type: String },
     isVerified: { type: Boolean, default: false },
     googleId: { type: String, unique: true, sparse: true },
     planId: { type: mongoose_2.default.Schema.Types.ObjectId, ref: 'Plan', default: null },
+    first_time_byer: { type: Boolean, default: true },
 }, { timestamps: true, });
 exports.UserModel = mongoose_2.default.model('User', UserSchema);

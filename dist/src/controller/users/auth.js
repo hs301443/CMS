@@ -52,7 +52,6 @@ const signup = async (req, res) => {
         email: data.email,
         password: hashedPassword,
         phonenumber: data.phoneNumber,
-        imagePath: data.imagePath || null,
         isVerified: false,
     });
     // create verification code

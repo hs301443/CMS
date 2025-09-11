@@ -70,7 +70,6 @@ export const signup = async (req: Request, res: Response) => {
     email: data.email,
     password: hashedPassword,
     phonenumber: data.phoneNumber,
-    imagePath: data.imagePath || null,
     isVerified: false,
   });
 

@@ -10,7 +10,7 @@ router.post("/",  uploadTemplate.fields([
   ]), catchAsync(createTemplate));
 router.get("/", catchAsync(getAllTemplates));
 router.get("/:id", catchAsync(getTemplateById));
-router.patch("/:id",  uploadTemplate.fields([
+router.put("/:id",  uploadTemplate.fields([
     { name: "template_file_path", maxCount: 1 },
     { name: "photo", maxCount: 1 },
   ]), catchAsync(updateTemplate));
