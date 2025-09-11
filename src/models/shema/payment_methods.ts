@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const paymetnMethodSchema = new mongoose.Schema({
 
-    name:{ type: String, required: true },
+    name:{ type: String, required: true, unique: true },
     isActive:{ type: Boolean, default: true},
     discription:{ type: String, required: true},
     logo_Url:{ type: String, required: true},

@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentMethodModel = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const paymetnMethodSchema = new mongoose_1.default.Schema({
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
     isActive: { type: Boolean, default: true },
     discription: { type: String, required: true },
     logo_Url: { type: String, required: true },

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const PlanSchema = new mongoose.Schema({
-name :{ type: String, required: true },
+name :{ type: String, required: true, unique: true },
 price_monthly:{ type: Number, },
 price_quarterly :{ type: Number, },
 price_semi_annually :{ type: Number,  },

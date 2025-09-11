@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PromoCodeModel = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const PromoCodeSchema = new mongoose_1.default.Schema({
-    code: { type: String, required: true },
+    code: { type: String, required: true, unique: true },
     start_date: { type: Date, required: true },
     end_date: { type: Date, required: true },
     discount_type: { type: String, enum: ['percentage', 'amount'], default: 'percentage' },

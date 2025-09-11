@@ -51,7 +51,6 @@ export const getPromoCodeWithPlansById = async (req: Request, res: Response) => 
   SuccessResponse(res, { promo, plans });
 };
 
-// ✏️ تعديل كود + الخطط
 export const updatePromoCodeWithPlans = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { promoCodeData, planLinks } = req.body;
@@ -69,7 +68,6 @@ export const updatePromoCodeWithPlans = async (req: Request, res: Response) => {
   SuccessResponse(res, { message: "Promo code and plans updated", promo });
 };
 
-// ❌ حذف كود + الخطط المرتبطة
 export const deletePromoCodeWithPlans = async (req: Request, res: Response) => {
   const { id } = req.params;
   const promo = await PromoCodeModel.findByIdAndDelete(id);

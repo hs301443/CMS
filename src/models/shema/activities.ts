@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 const activitySchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    name: { type: String, required: true,unique: true },
     isActive: { type: Boolean, default: true }
   },
   { timestamps: true }
