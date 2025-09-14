@@ -31,12 +31,24 @@ exports.createPromoCodeWithPlans = createPromoCodeWithPlans;
 const getAllPromoCodesWithPlans = async (req, res) => {
     if (!req.user || req.user.role !== 'admin')
         throw new unauthorizedError_1.UnauthorizedError('access denied');
-    const promos = await promo_code_1.PromoCodeModel.find()
-        .lean()
-        .exec();
+    const promos = await promo_code_1.PromoCodeModel.find().lean().exec();
     const promosWithPlans = await Promise.all(promos.map(async (promo) => {
-        const plans = await promocode_plans_1.PromoCodePlanModel.find({ codeId: promo._id }).lean();
-        return { ...promo, plans };
+        const plans = await promocode_plans_1.PromoCodePlanModel.find({ codeId: promo._id }).populate('planId').lean();
+        // ✅ ظبط التواريخ
+        const formattedPromo = {
+            ...promo,
+            start_date: promo.start_date ? new Date(promo.start_date).toISOString().split("T")[0] : null,
+            end_date: promo.end_date ? new Date(promo.end_date).toISOString().split("T")[0] : null,
+        };
+        const formattedPlans = plans.map((plan) => {
+            const p = plan; // أو as { start_date?: Date; end_date?: Date }
+            return {
+                ...p,
+                start_date: p.start_date ? new Date(p.start_date).toISOString().split("T")[0] : null,
+                end_date: p.end_date ? new Date(p.end_date).toISOString().split("T")[0] : null,
+            };
+        });
+        return { ...formattedPromo, plans: formattedPlans };
     }));
     (0, response_1.SuccessResponse)(res, { promos: promosWithPlans });
 };
@@ -45,11 +57,25 @@ const getPromoCodeWithPlansById = async (req, res) => {
     if (!req.user || req.user.role !== 'admin')
         throw new unauthorizedError_1.UnauthorizedError('access denied');
     const { id } = req.params;
-    const promo = await promo_code_1.PromoCodeModel.findById(id);
+    const promo = await promo_code_1.PromoCodeModel.findById(id).populate('planId').lean();
     if (!promo)
         throw new NotFound_1.NotFound("Promo code not found");
-    const plans = await promocode_plans_1.PromoCodePlanModel.find({ codeId: id });
-    (0, response_1.SuccessResponse)(res, { promo, plans });
+    const plans = await promocode_plans_1.PromoCodePlanModel.find({ codeId: id }).lean();
+    // ✅ ظبط التواريخ
+    const formattedPromo = {
+        ...promo,
+        start_date: promo.start_date ? new Date(promo.start_date).toISOString().split("T")[0] : null,
+        end_date: promo.end_date ? new Date(promo.end_date).toISOString().split("T")[0] : null,
+    };
+    const formattedPlans = plans.map((plan) => {
+        const p = plan; // أو as { start_date?: Date; end_date?: Date }
+        return {
+            ...p,
+            start_date: p.start_date ? new Date(p.start_date).toISOString().split("T")[0] : null,
+            end_date: p.end_date ? new Date(p.end_date).toISOString().split("T")[0] : null,
+        };
+    });
+    (0, response_1.SuccessResponse)(res, { promo: formattedPromo, plans: formattedPlans });
 };
 exports.getPromoCodeWithPlansById = getPromoCodeWithPlansById;
 const updatePromoCodeWithPlans = async (req, res) => {
