@@ -38,7 +38,7 @@ export const getUserById = async (req: Request, res: Response) => {
     throw new UnauthorizedError('Access denied');
   }
     const { id } = req.params;
-  const user = await UserModel.findById(id).select('-password');
+  const user = await UserModel.findById(id).select('-password').populate('planId',"name");
   if (!user) {
     throw new NotFound('User not found');
   }
@@ -83,6 +83,6 @@ export const getAllUsers = async (req: Request, res: Response) => {
   if (!req.user || req.user.role !== 'admin') {
     throw new UnauthorizedError('Access denied');
   }
-  const users = await UserModel.find().select('-password');
+  const users = await UserModel.find().select('-password').populate('planId',"name");
   SuccessResponse(res, { message: 'Users fetched successfully', users });
 };
