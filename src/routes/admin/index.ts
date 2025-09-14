@@ -11,6 +11,7 @@ import PaymentRouter from "./payments";
 import websiteRouter from "./Websites";
 import promocodeRouter from "./promo_code";
 import userRouter from "./User";
+import promocodeuserrouter from './promocode_user'
 export const route = Router();
 
 route.use("/auth", authRouter);
@@ -24,4 +25,5 @@ route.use("/payments", PaymentRouter);
 route.use("/websites",websiteRouter)
 route.use("/promocode",promocodeRouter)
 route.use("/users",userRouter)
+route.use("/promocodeuser",promocodeuserrouter)
 export default route;

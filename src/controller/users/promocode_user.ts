@@ -21,7 +21,7 @@ export const getPromoCodeUserById =async (req: Request, res: Response) => {
     const userId = req.user.id;
     const {id} = req.params;
     if(!id) throw new BadRequest('Please provide promocode id');
-    const promocode = await PromoCodeUserModel.findOne({userId, codeId: id});
+    const promocode = await PromoCodeUserModel.findOne({userId, id});
     if(!promocode) throw new NotFound('Promocode not found');
     SuccessResponse(res, { message: 'Promocode found successfully', promocode });
 }
