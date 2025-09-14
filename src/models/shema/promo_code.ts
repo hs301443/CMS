@@ -6,7 +6,7 @@ const PromoCodeSchema = new mongoose.Schema({
     end_date: { type: Date, required: true },
     discount_type: { type:String, enum: ['percentage', 'amount'], default: 'percentage' },
     discount_value: { type: Number, required: true },
-    isActive: { type: Boolean, default: true },
+    isActive: { type: Boolean, domocodeefault: true },
     maxusers:{ type: Number, default: 0 },
     available_users:{ type: Number, default: 0 },
     status:{type:String, enum:['first_time','All','renew'], default:'first_time'}
