@@ -61,7 +61,6 @@ const getPromoCodeWithPlansById = async (req, res) => {
     if (!promo)
         throw new NotFound_1.NotFound("Promo code not found");
     const plans = await promocode_plans_1.PromoCodePlanModel.find({ codeId: id }).lean();
-    // ✅ ظبط التواريخ
     const formattedPromo = {
         ...promo,
         start_date: promo.start_date ? new Date(promo.start_date).toISOString().split("T")[0] : null,

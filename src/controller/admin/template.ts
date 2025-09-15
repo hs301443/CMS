@@ -54,7 +54,7 @@ export const updateTemplate = async (req: Request, res: Response) => {
   }
 
   const { id } = req.params;
-  const { name, activityId } = req.body;
+  const { name, activityId, isActive, New } = req.body; // ← خد القيم من body
 
   if (!id) throw new BadRequest("Template ID is required");
 
@@ -62,6 +62,10 @@ export const updateTemplate = async (req: Request, res: Response) => {
   const updateData: any = {};
   if (name) updateData.name = name;
   if (activityId) updateData.activityId = activityId;
+
+  // ✅ الحقول الجديدة
+  if (typeof isActive !== "undefined") updateData.isActive = isActive;
+  if (typeof New !== "undefined") updateData.New = New;
 
   // ✅ Multer بيرجع الملفات في req.files
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -96,7 +100,7 @@ export const getTemplateById = async (req: Request, res: Response) => {
   if (!id) throw new BadRequest("ID is required");
 
   const template = await TemplateModel.findById(id).populate('activityId','name isActive');
-  if (!template) throw new NotFound("Template not found");
+  if (!template) throw new NotFound("Template not found");  
 
   SuccessResponse(res, { message: "get template successfully", template });
 };

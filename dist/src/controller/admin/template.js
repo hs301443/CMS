@@ -48,7 +48,7 @@ const updateTemplate = async (req, res) => {
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
     }
     const { id } = req.params;
-    const { name, activityId } = req.body;
+    const { name, activityId, isActive, New } = req.body; // ← خد القيم من body
     if (!id)
         throw new BadRequest_1.BadRequest("Template ID is required");
     // 📌 بناء update object
@@ -57,6 +57,11 @@ const updateTemplate = async (req, res) => {
         updateData.name = name;
     if (activityId)
         updateData.activityId = activityId;
+    // ✅ الحقول الجديدة
+    if (typeof isActive !== "undefined")
+        updateData.isActive = isActive;
+    if (typeof New !== "undefined")
+        updateData.New = New;
     // ✅ Multer بيرجع الملفات في req.files
     const files = req.files;
     if (files?.template_file_path && files.template_file_path[0]) {

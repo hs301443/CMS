@@ -71,7 +71,6 @@ export const getPromoCodeWithPlansById = async (req: Request, res: Response) => 
 
   const plans = await PromoCodePlanModel.find({ codeId: id }).lean();
 
-  // ✅ ظبط التواريخ
   const formattedPromo = {
     ...promo,
     start_date: promo.start_date ? new Date(promo.start_date).toISOString().split("T")[0] : null,
@@ -120,3 +119,4 @@ export const deletePromoCodeWithPlans = async (req: Request, res: Response) => {
 
   SuccessResponse(res, { message: "Promo code and linked plans deleted" });
 };
+
