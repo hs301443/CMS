@@ -19,18 +19,14 @@ export const verifyGoogleToken = async (req: Request, res: Response) => {
     });
 
     const payload = ticket.getPayload();
-
     if (!payload) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid Google payload" });
+      return res.status(400).json({ success: false, message: "Invalid Google payload" });
     }
 
     const email = payload.email!;
     const name = payload.name || "Unknown User";
     const googleId = payload.sub;
 
-    // 🔍 check if user exists by googleId OR email
     let user = await UserModel.findOne({ $or: [{ googleId }, { email }] });
 
     if (!user) {
@@ -44,17 +40,19 @@ export const verifyGoogleToken = async (req: Request, res: Response) => {
       await user.save();
     } else {
       // 👤 Login (existing user)
-      // لو المستخدم كان موجود بالإيميل بس ومفيش googleId نخزنه
       if (!user.googleId) {
         user.googleId = googleId;
-        await user.save();
       }
+     
+      await user.save();
     }
 
-    // 🔑 Generate JWT
-    const authToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, {
-      expiresIn: "7d",
-    });
+    // 🔑 Generate JWT مع الدور
+    const authToken = jwt.sign(
+      { id: user._id }, 
+      process.env.JWT_SECRET!, 
+      { expiresIn: "7d" }
+    );
 
     return res.json({
       success: true,
