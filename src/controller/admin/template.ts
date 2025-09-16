@@ -5,6 +5,8 @@ import { NotFound } from '../../Errors/NotFound';
 import { UnauthorizedError } from '../../Errors/unauthorizedError';
 import { SuccessResponse } from '../../utils/response';
 
+
+
 export const createTemplate = async (req: Request, res: Response) => {
   if (!req.user || req.user.role !== "admin") {
     throw new UnauthorizedError("Access denied");
@@ -14,23 +16,33 @@ export const createTemplate = async (req: Request, res: Response) => {
   if (!name) throw new BadRequest("name is required");
   if (!activityId) throw new BadRequest("activityId is required");
 
-  // ✅ Multer بيرجعهم كـ object of arrays
   const files = req.files as {
     [fieldname: string]: Express.Multer.File[];
   };
 
-  if (!files || !files["template_file_path"] || !files["photo"]) {
-    throw new BadRequest("Both template file and photo are required");
+  if (
+    !files ||
+    !files["template_file_path"] ||
+    !files["photo"] ||
+    !files["overphoto"]
+  ) {
+    throw new BadRequest("All files (template, photo, overphoto) are required");
   }
+
+  // بناء اللينك كامل لكل ملف
+  const buildLink = (file: Express.Multer.File, folder: string) =>
+    `${req.protocol}://${req.get("host")}/uploads/${folder}/${file.filename}`;
 
   const templateFile = files["template_file_path"][0];
   const photoFile = files["photo"][0];
+  const overphotoFile = files["overphoto"][0];
 
   const newTemplate = await TemplateModel.create({
     name,
     activityId,
-    template_file_path: templateFile.path,
-    photo: photoFile.path,
+    template_file_path: buildLink(templateFile, "templates"),
+    photo: buildLink(photoFile, "templates"),
+    overphoto: buildLink(overphotoFile, "templates"),
   });
 
   SuccessResponse(res, {
@@ -38,7 +50,6 @@ export const createTemplate = async (req: Request, res: Response) => {
     newTemplate,
   });
 };
-
 export const getAllTemplates =async (req: Request, res: Response) => {
      if (!req.user || req.user.role !== 'admin')  throw new UnauthorizedError("Access denied");
     const template = await TemplateModel.find().populate('activityId','name isActive');
@@ -91,7 +102,6 @@ export const updateTemplate = async (req: Request, res: Response) => {
     template,
   });
 };
-
 
 export const getTemplateById = async (req: Request, res: Response) => {
   if (!req.user || req.user.role !== "admin") throw new UnauthorizedError("Access denied");

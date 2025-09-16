@@ -15,18 +15,24 @@ const createTemplate = async (req, res) => {
         throw new BadRequest_1.BadRequest("name is required");
     if (!activityId)
         throw new BadRequest_1.BadRequest("activityId is required");
-    // ✅ Multer بيرجعهم كـ object of arrays
     const files = req.files;
-    if (!files || !files["template_file_path"] || !files["photo"]) {
-        throw new BadRequest_1.BadRequest("Both template file and photo are required");
+    if (!files ||
+        !files["template_file_path"] ||
+        !files["photo"] ||
+        !files["overphoto"]) {
+        throw new BadRequest_1.BadRequest("All files (template, photo, overphoto) are required");
     }
+    // بناء اللينك كامل لكل ملف
+    const buildLink = (file, folder) => `${req.protocol}://${req.get("host")}/uploads/${folder}/${file.filename}`;
     const templateFile = files["template_file_path"][0];
     const photoFile = files["photo"][0];
+    const overphotoFile = files["overphoto"][0];
     const newTemplate = await templates_1.TemplateModel.create({
         name,
         activityId,
-        template_file_path: templateFile.path,
-        photo: photoFile.path,
+        template_file_path: buildLink(templateFile, "templates"),
+        photo: buildLink(photoFile, "templates"),
+        overphoto: buildLink(overphotoFile, "templates"),
     });
     (0, response_1.SuccessResponse)(res, {
         message: "Template created successfully",

@@ -16,7 +16,6 @@ const makeStorage = (folderName) => multer_1.default.diskStorage({
         cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
-        // نخلي الاسم unique + fieldname + extension
         const uniqueName = `${file.fieldname}-${Date.now()}${path_1.default.extname(file.originalname)}`;
         cb(null, uniqueName);
     },

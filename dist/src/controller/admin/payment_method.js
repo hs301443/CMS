@@ -7,15 +7,20 @@ const NotFound_1 = require("../../Errors/NotFound");
 const unauthorizedError_1 = require("../../Errors/unauthorizedError");
 const response_1 = require("../../utils/response");
 const createPaymentMethod = async (req, res) => {
-    if (!req.user || req.user.role !== "admin")
+    // التحقق من صلاحيات الأدمن
+    if (!req.user || req.user.role !== "admin") {
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
+    }
     const { name, discription } = req.body;
-    if (!name || !discription)
+    if (!name || !discription) {
         throw new BadRequest_1.BadRequest("Please provide all the required fields");
+    }
     // التأكد من رفع اللوجو
-    if (!req.file)
+    if (!req.file) {
         throw new BadRequest_1.BadRequest("Logo file is required");
-    const logo_Url = `/uploads/payment_logos/${req.file.filename}`; // أو المسار الكامل حسب إعدادات السيرفر
+    }
+    // بناء اللينك الكامل للملف بعد رفعه
+    const logo_Url = `${req.protocol}://${req.get("host")}/uploads/payment_logos/${req.file.filename}`;
     const paymentMethod = await payment_methods_1.PaymentMethodModel.create({
         name,
         discription,
@@ -24,7 +29,7 @@ const createPaymentMethod = async (req, res) => {
     });
     (0, response_1.SuccessResponse)(res, {
         message: "Payment method created successfully",
-        paymentMethod
+        paymentMethod,
     });
 };
 exports.createPaymentMethod = createPaymentMethod;
@@ -50,6 +55,7 @@ const getPaymentMethodById = async (req, res) => {
 };
 exports.getPaymentMethodById = getPaymentMethodById;
 const updatePaymentMethod = async (req, res) => {
+    // التحقق من صلاحيات الأدمن
     if (!req.user || req.user.role !== "admin")
         throw new unauthorizedError_1.UnauthorizedError("Access denied");
     const { id } = req.params;
@@ -58,11 +64,11 @@ const updatePaymentMethod = async (req, res) => {
     const paymentMethod = await payment_methods_1.PaymentMethodModel.findById(id);
     if (!paymentMethod)
         throw new NotFound_1.NotFound("Payment method not found");
-    // تحديث الحقول من الـ body
+    // تحديث الحقول من body
     Object.assign(paymentMethod, req.body);
     // تحديث اللوجو لو تم رفعه
     if (req.file) {
-        paymentMethod.logo_Url = `/uploads/payment_logos/${req.file.filename}`;
+        paymentMethod.logo_Url = `${req.protocol}://${req.get("host")}/uploads/payment_logos/${req.file.filename}`;
     }
     await paymentMethod.save(); // حفظ التغييرات
     (0, response_1.SuccessResponse)(res, {

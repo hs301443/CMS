@@ -9,6 +9,7 @@ import fs from "fs";
 import path from "path";
 import { TemplateModel } from "../../models/shema/templates";
 import mongoose from "mongoose";
+
 export const createWebsite = async (req: Request, res: Response) => {
   if (!req.user) throw new UnauthorizedError("User not authenticated");
 
@@ -36,15 +37,24 @@ export const createWebsite = async (req: Request, res: Response) => {
   if (subscription.websites_remaining_count <= 0) {
     throw new BadRequest("You have reached your website creation limit");
   }
+
   // ✅ اعمل نسخة من التيمبلت
   const websiteId = new Date().getTime();
-  const websitesDir = path.join(__dirname, "../uploads/websites", String(websiteId));
+  const websitesDir = path.join(__dirname, "../../uploads/websites", String(websiteId));
   if (!fs.existsSync(websitesDir)) {
     fs.mkdirSync(websitesDir, { recursive: true });
   }
 
-  const copiedTemplatePath = path.join(websitesDir, path.basename(template.template_file_path));
-  fs.copyFileSync(template.template_file_path, copiedTemplatePath);
+  // ✨ هات اسم الملف من اللينك
+  const templateFileName = path.basename(template.template_file_path); // ex: file.zip
+  const templateSourcePath = path.join(__dirname, "../../uploads/templates", templateFileName);
+  const copiedTemplatePath = path.join(websitesDir, templateFileName);
+
+  // ✨ انسخ الملف
+  fs.copyFileSync(templateSourcePath, copiedTemplatePath);
+
+  // ✨ ابني اللينك الجديد للمشروع
+  const projectLink = `${req.protocol}://${req.get("host")}/uploads/websites/${websiteId}/${templateFileName}`;
 
   // ✅ أنشئ الويبسايت الجديد
   const newWebsite = await WebsiteModel.create({
@@ -52,7 +62,7 @@ export const createWebsite = async (req: Request, res: Response) => {
     templateId,
     activitiesId,
     demo_link,
-    project_path: copiedTemplatePath,
+    project_path: projectLink, // هنا اللينك مش المسار الداخلي
     start_date: new Date(),
     end_date: subscription.endDate,
     status: "pending_admin_review",
@@ -72,6 +82,7 @@ export const createWebsite = async (req: Request, res: Response) => {
     },
   });
 };
+
 
 export const getAllWebsites = async (req: Request, res: Response) => {
   if (!req.user) throw new UnauthorizedError("User not authenticated");
@@ -96,37 +107,49 @@ export const updateWebsite = async (req: Request, res: Response) => {
   const { websiteId } = req.params;
   const { demo_link, status, rejected_reason } = req.body;
 
-  let website;
-  try {
-   
-    website = await WebsiteModel.findOne({
-      _id: new mongoose.Types.ObjectId(websiteId),
-      userId: new mongoose.Types.ObjectId(req.user.id),
-    });
-  } catch (err) {
-    console.error("❌ Error converting IDs:", err);
+  // ✅ تحقق من الـ ID
+  if (!mongoose.Types.ObjectId.isValid(websiteId)) {
     throw new BadRequest("Invalid website ID format");
   }
 
+  // ✅ هات الويبسايت الخاص باليوزر
+  const website = await WebsiteModel.findOne({
+    _id: websiteId,
+    userId: req.user.id,
+  });
+
   if (!website) {
-    console.log("❌ Website not found with query:", {
-      websiteId,
-      userId: req.user.id,
-    });
-    throw new BadRequest("Website not found or you do not own it");
+    throw new NotFound("Website not found or you do not own it");
   }
 
-  // ✅ Debug website.userId
-
+  // ✅ تحديث الحقول الأساسية
   if (demo_link) website.demo_link = demo_link;
   if (status) website.status = status;
   if (rejected_reason) website.rejected_reason = rejected_reason;
 
+  // ✅ لو جالك ملف جديد (project zip مثلًا)
   if (req.file) {
-    if (fs.existsSync(website.project_path)) {
-      fs.unlinkSync(website.project_path);
+    const websiteFolder = path.join(
+      __dirname,
+      "../../uploads/websites",
+      String(website._id)
+    );
+
+    if (!fs.existsSync(websiteFolder)) {
+      fs.mkdirSync(websiteFolder, { recursive: true });
     }
-    website.project_path = req.file.path;
+
+    // ✨ خزن الملف الجديد جوه فولدر الويبسايت
+    const fileName = Date.now() + path.extname(req.file.originalname);
+    const newPath = path.join(websiteFolder, fileName);
+
+    fs.writeFileSync(newPath, req.file.buffer);
+
+    // ✨ اعمل لينك عام جديد
+    const projectLink = `${req.protocol}://${req.get("host")}/uploads/websites/${website._id}/${fileName}`;
+
+    // ✨ حدث الـ project_path
+    website.project_path = projectLink;
   }
 
   await website.save();
@@ -136,7 +159,6 @@ export const updateWebsite = async (req: Request, res: Response) => {
     website,
   });
 };
-
 
 
 export const deleteWebsite = async (req: Request, res: Response) => {

@@ -40,19 +40,25 @@ const createWebsite = async (req, res) => {
     }
     // ✅ اعمل نسخة من التيمبلت
     const websiteId = new Date().getTime();
-    const websitesDir = path_1.default.join(__dirname, "../uploads/websites", String(websiteId));
+    const websitesDir = path_1.default.join(__dirname, "../../uploads/websites", String(websiteId));
     if (!fs_1.default.existsSync(websitesDir)) {
         fs_1.default.mkdirSync(websitesDir, { recursive: true });
     }
-    const copiedTemplatePath = path_1.default.join(websitesDir, path_1.default.basename(template.template_file_path));
-    fs_1.default.copyFileSync(template.template_file_path, copiedTemplatePath);
+    // ✨ هات اسم الملف من اللينك
+    const templateFileName = path_1.default.basename(template.template_file_path); // ex: file.zip
+    const templateSourcePath = path_1.default.join(__dirname, "../../uploads/templates", templateFileName);
+    const copiedTemplatePath = path_1.default.join(websitesDir, templateFileName);
+    // ✨ انسخ الملف
+    fs_1.default.copyFileSync(templateSourcePath, copiedTemplatePath);
+    // ✨ ابني اللينك الجديد للمشروع
+    const projectLink = `${req.protocol}://${req.get("host")}/uploads/websites/${websiteId}/${templateFileName}`;
     // ✅ أنشئ الويبسايت الجديد
     const newWebsite = await websites_1.WebsiteModel.create({
         userId: req.user.id,
         templateId,
         activitiesId,
         demo_link,
-        project_path: copiedTemplatePath,
+        project_path: projectLink, // هنا اللينك مش المسار الداخلي
         start_date: new Date(),
         end_date: subscription.endDate,
         status: "pending_admin_review",
@@ -98,36 +104,39 @@ const updateWebsite = async (req, res) => {
         throw new index_1.UnauthorizedError("User not authenticated");
     const { websiteId } = req.params;
     const { demo_link, status, rejected_reason } = req.body;
-    let website;
-    try {
-        website = await websites_1.WebsiteModel.findOne({
-            _id: new mongoose_1.default.Types.ObjectId(websiteId),
-            userId: new mongoose_1.default.Types.ObjectId(req.user.id),
-        });
-    }
-    catch (err) {
-        console.error("❌ Error converting IDs:", err);
+    // ✅ تحقق من الـ ID
+    if (!mongoose_1.default.Types.ObjectId.isValid(websiteId)) {
         throw new BadRequest_1.BadRequest("Invalid website ID format");
     }
+    // ✅ هات الويبسايت الخاص باليوزر
+    const website = await websites_1.WebsiteModel.findOne({
+        _id: websiteId,
+        userId: req.user.id,
+    });
     if (!website) {
-        console.log("❌ Website not found with query:", {
-            websiteId,
-            userId: req.user.id,
-        });
-        throw new BadRequest_1.BadRequest("Website not found or you do not own it");
+        throw new NotFound_1.NotFound("Website not found or you do not own it");
     }
-    // ✅ Debug website.userId
+    // ✅ تحديث الحقول الأساسية
     if (demo_link)
         website.demo_link = demo_link;
     if (status)
         website.status = status;
     if (rejected_reason)
         website.rejected_reason = rejected_reason;
+    // ✅ لو جالك ملف جديد (project zip مثلًا)
     if (req.file) {
-        if (fs_1.default.existsSync(website.project_path)) {
-            fs_1.default.unlinkSync(website.project_path);
+        const websiteFolder = path_1.default.join(__dirname, "../../uploads/websites", String(website._id));
+        if (!fs_1.default.existsSync(websiteFolder)) {
+            fs_1.default.mkdirSync(websiteFolder, { recursive: true });
         }
-        website.project_path = req.file.path;
+        // ✨ خزن الملف الجديد جوه فولدر الويبسايت
+        const fileName = Date.now() + path_1.default.extname(req.file.originalname);
+        const newPath = path_1.default.join(websiteFolder, fileName);
+        fs_1.default.writeFileSync(newPath, req.file.buffer);
+        // ✨ اعمل لينك عام جديد
+        const projectLink = `${req.protocol}://${req.get("host")}/uploads/websites/${website._id}/${fileName}`;
+        // ✨ حدث الـ project_path
+        website.project_path = projectLink;
     }
     await website.save();
     (0, response_1.SuccessResponse)(res, {
