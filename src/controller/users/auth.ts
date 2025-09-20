@@ -122,13 +122,24 @@ export const verifyEmail = async (req: Request, res: Response) => {
   const user = await UserModel.findByIdAndUpdate(
     userId,
     { isVerified: true },
-    { new: true } 
+    { new: true } // يرجع المستند بعد التحديث
   );
+
+  if (!user) {
+    return res.status(404).json({ success: false, error: { code: 404, message: "User not found" } });
+  }
 
   // حذف سجل التحقق
   await EmailVerificationModel.deleteOne({ userId });
 
-  res.json({ success: true, message: "Email verified successfully"});
+  // توليد التوكن
+  const token = generateToken({
+    id: user._id,
+    name: user.name,
+  });
+
+  // إرسال الرد مع التوكن
+  return res.json({ success: true, message: "Email verified successfully", token });
 };
 
 
@@ -221,21 +232,27 @@ export const verifyResetCode = async (req: Request, res: Response) => {
 };
 
 export const resetPassword = async (req: Request, res: Response) => {
-  const { email, code, newPassword } = req.body;
+  const { email, newPassword } = req.body;
 
   const user = await UserModel.findOne({ email });
   if (!user) throw new NotFound("User not found");
 
   const record = await EmailVerificationModel.findOne({ userId: user._id });
   if (!record) throw new BadRequest("No reset code found");
-  if (record.verificationCode !== code) throw new BadRequest("Invalid code");
-  if (record.expiresAt < new Date()) throw new BadRequest("Code expired");
 
+  // تحديث الباسورد
   user.password = await bcrypt.hash(newPassword, 10);
   await user.save();
 
+  // حذف سجل التحقق
   await EmailVerificationModel.deleteOne({ userId: user._id });
 
-  SuccessResponse(res, { message: "Password reset successful" }, 200);
-};
+  // توليد التوكن
+  const token = generateToken({
+    id: user._id,
+    name: user.name,
+  });
 
+  // إرسال الرد مع التوكن
+  return SuccessResponse(res, { message: "Password reset successful", token }, 200);
+};
